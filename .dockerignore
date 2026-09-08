@@ -1,0 +1,9 @@
+shiken
+shiken.db*
+backups/
+server.log
+tools/
+*.sql
+Dockerfile
+.dockerignore
+Makefile
