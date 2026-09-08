@@ -1,0 +1,20 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>语法复习</h1>
+  <a class="btn btn-primary" href="/grammars/review">换一批</a>
+</div>
+<p class="muted">随机抽取 {{len .Items}} 条语法（按各级别在库中的分布等比例抽取），点击进入详情。</p>
+{{if .Items}}
+<div class="review-list">
+  {{range $i, $g := .Items}}
+  <a class="review-item" href="/grammars/{{$g.ID}}?back={{$.Back}}">
+    <span class="review-index">{{add $i 1}}</span>
+    <span class="jp review-format">{{$g.Format}}</span>
+    <span class="tag tag-level">L{{$g.Level}}</span>
+  </a>
+  {{end}}
+</div>
+{{else}}
+<p class="empty">语法库为空，<a href="/grammars/new">先去录入语法</a>。</p>
+{{end}}
+{{template "footer" .}}

@@ -1,0 +1,23 @@
+{{template "header" .}}
+<h1>日语背单词与语法系统</h1>
+<div class="cards">
+  <a class="card" href="/words">
+    <div class="card-num">{{.WordCount}}</div>
+    <div class="card-label">单词库</div>
+  </a>
+  <a class="card" href="/grammars">
+    <div class="card-num">{{.GrammarCount}}</div>
+    <div class="card-label">语法库</div>
+  </a>
+  <a class="card" href="/error-words">
+    <div class="card-num">{{.ErrorCount}}</div>
+    <div class="card-label">易错单词</div>
+  </a>
+</div>
+<div class="cards">
+  <a class="card card-action" href="/words/new">录入单词</a>
+  <a class="card card-action" href="/grammars/new">录入语法</a>
+  <a class="card card-action" href="/grammars/review">语法复习</a>
+  <a class="card card-action" href="/test">单词测试</a>
+</div>
+{{template "footer" .}}

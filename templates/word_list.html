@@ -1,0 +1,64 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>单词列表</h1>
+  <a class="btn btn-primary" href="/words/new">+ 录入单词</a>
+</div>
+<form class="search-bar" method="get" action="/words">
+  <input type="text" name="q" value="{{.Page.Query}}" placeholder="搜索单词 / 假名 / 含义...">
+  <select name="level" onchange="this.form.submit()">
+    <option value=""{{if eq .Level 0}} selected{{end}}>全部级别</option>
+    {{range $i := iterate 5}}
+    <option value="{{$i}}"{{if eq $.Level $i}} selected{{end}}>L{{$i}}</option>
+    {{end}}
+  </select>
+  <button class="btn" type="submit">搜索</button>
+  {{if or .Page.Query (ne .Level 0)}}<a class="btn btn-plain" href="/words">清除</a>{{end}}
+</form>
+<form method="post" action="/words/delete" onsubmit="return confirm('确定删除选中的单词吗？关联关系也会被删除。')">
+<table class="table">
+  <thead>
+    <tr>
+      <th class="col-check"><input type="checkbox" onclick="toggleAll(this)"></th>
+      <th>单词</th>
+      <th>假名</th>
+      <th>含义</th>
+      <th>级别</th>
+      <th>录入时间</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Items}}
+    <tr>
+      <td><input type="checkbox" name="ids" value="{{.ID}}"></td>
+      <td>
+        <a href="/words/{{.ID}}" class="item-title jp">{{.Word}}</a>
+        {{if .IsError}}<span class="tag tag-error">易错</span>{{end}}
+      </td>
+      <td class="jp muted">{{.Kana}}</td>
+      <td class="cell-meanings">{{range .Meanings}}<div>{{.Text}}</div>{{end}}</td>
+      <td><span class="tag tag-level">L{{.Level}}</span></td>
+      <td class="cell-time">{{minute .CreatedAt}}</td>
+      <td class="cell-actions">
+        <a class="btn btn-small" href="/words/{{.ID}}/edit">编辑</a>
+        <button class="btn btn-small btn-danger" type="submit" form="del-w-{{.ID}}"
+          onclick="return confirm('确定删除这个单词吗？')">删除</button>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="7" class="empty">暂无单词，<a href="/words/new">去录入</a></td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{if .Items}}
+<div class="list-footer">
+  <button class="btn btn-danger" type="submit">删除选中</button>
+  <span class="muted">共 {{.Page.Count}} 条</span>
+</div>
+{{end}}
+</form>
+{{range .Items}}
+<form id="del-w-{{.ID}}" method="post" action="/words/{{.ID}}/delete"></form>
+{{end}}
+{{template "pagination" .Page}}
+{{template "footer" .}}

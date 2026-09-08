@@ -1,0 +1,35 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>关联其他语法</h1>
+  <a class="btn" href="/grammars/{{.Grammar.ID}}">返回详情</a>
+</div>
+<p>当前语法：<strong class="jp">{{.Grammar.Format}}</strong></p>
+<form class="search-bar" method="get">
+  <input type="text" name="q" value="{{.Query}}" placeholder="输入关键字模糊搜索语法库...">
+  <button class="btn" type="submit">搜索</button>
+</form>
+{{if .Query}}
+  {{if .Results}}
+  <table class="table">
+    <thead><tr><th>语法格式</th><th>语法含义</th><th>操作</th></tr></thead>
+    <tbody>
+      {{range .Results}}
+      <tr>
+        <td class="jp">{{.Format}}</td>
+        <td class="cell-meanings">{{range .Meanings}}{{if .Text}}<div>{{.Text}}</div>{{end}}{{end}}</td>
+        <td>
+          <form method="post" action="/grammars/{{$.Grammar.ID}}/relations">
+            <input type="hidden" name="rid" value="{{.ID}}">
+            <input type="hidden" name="ref" value="/grammars/{{$.Grammar.ID}}/relate?q={{$.Query}}">
+            <button class="btn btn-small btn-primary" type="submit">关联</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="empty">没有可关联的语法（可能已关联或不存在）。</p>
+  {{end}}
+{{end}}
+{{template "footer" .}}

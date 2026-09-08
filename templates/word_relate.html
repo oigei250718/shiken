@@ -1,0 +1,36 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>关联其他单词</h1>
+  <a class="btn" href="/words/{{.Word.ID}}">返回详情</a>
+</div>
+<p>当前单词：<strong class="jp">{{.Word.Word}}</strong>{{if .Word.Kana}} <span class="jp muted">（{{.Word.Kana}}）</span>{{end}}</p>
+<form class="search-bar" method="get">
+  <input type="text" name="q" value="{{.Query}}" placeholder="输入关键字模糊搜索单词库...">
+  <button class="btn" type="submit">搜索</button>
+</form>
+{{if .Query}}
+  {{if .Results}}
+  <table class="table">
+    <thead><tr><th>单词</th><th>假名</th><th>含义</th><th>操作</th></tr></thead>
+    <tbody>
+      {{range .Results}}
+      <tr>
+        <td class="jp">{{.Word}}</td>
+        <td class="jp muted">{{.Kana}}</td>
+        <td class="cell-meanings">{{range .Meanings}}<div>{{.Text}}</div>{{end}}</td>
+        <td>
+          <form method="post" action="/words/{{$.Word.ID}}/relations">
+            <input type="hidden" name="rid" value="{{.ID}}">
+            <input type="hidden" name="ref" value="/words/{{$.Word.ID}}/relate?q={{$.Query}}">
+            <button class="btn btn-small btn-primary" type="submit">关联</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="empty">没有可关联的单词（可能已关联或不存在）。</p>
+  {{end}}
+{{end}}
+{{template "footer" .}}

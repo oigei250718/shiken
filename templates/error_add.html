@@ -1,0 +1,35 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>添加易错单词</h1>
+  <a class="btn" href="/error-words">返回易错库</a>
+</div>
+<form class="search-bar" method="get">
+  <input type="text" name="q" value="{{.Query}}" placeholder="输入关键字模糊搜索单词库（单词 / 假名 / 含义）...">
+  <button class="btn" type="submit">搜索</button>
+</form>
+{{if .Query}}
+  {{if .Results}}
+  <table class="table">
+    <thead><tr><th>单词</th><th>假名</th><th>含义</th><th>操作</th></tr></thead>
+    <tbody>
+      {{range .Results}}
+      <tr>
+        <td class="jp">{{.Word}}</td>
+        <td class="jp muted">{{.Kana}}</td>
+        <td class="cell-meanings">{{range .Meanings}}<div>{{.Text}}</div>{{end}}</td>
+        <td>
+          <form method="post" action="/error-words/add">
+            <input type="hidden" name="word_id" value="{{.ID}}">
+            <input type="hidden" name="ref" value="/error-words/add?q={{$.Query}}">
+            <button class="btn btn-small btn-primary" type="submit">添加到易错库</button>
+          </form>
+        </td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+  {{else}}
+  <p class="empty">没有匹配的单词（可能已在易错库中或不存在）。</p>
+  {{end}}
+{{end}}
+{{template "footer" .}}

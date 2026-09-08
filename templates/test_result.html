@@ -1,0 +1,32 @@
+{{template "header" .}}
+<div class="result-card">
+  <h1>测试完成</h1>
+  <div class="result-stats">
+    <div class="stat stat-known">
+      <div class="stat-num">{{.Known}}</div>
+      <div class="stat-label">认识</div>
+    </div>
+    <div class="stat stat-unknown">
+      <div class="stat-num">{{.Unknown}}</div>
+      <div class="stat-label">不认识</div>
+    </div>
+  </div>
+  {{if .UnknownWords}}
+  <h3>不认识的单词（已加入易错单词库）：</h3>
+  <ul class="rel-list result-unknown">
+    {{range .UnknownWords}}
+    <li>
+      <a class="jp" href="/words/{{.ID}}">{{.Word}}{{if .Kana}}（{{.Kana}}）{{end}}</a>
+      <span class="muted">{{range $i, $m := .Meanings}}{{if $i}}；{{end}}{{$m.Text}}{{end}}</span>
+    </li>
+    {{end}}
+  </ul>
+  {{else}}
+  <p>全部认识，太棒了！</p>
+  {{end}}
+  <div class="action-bar">
+    <a class="btn btn-primary" href="/test">再来一轮</a>
+    <a class="btn" href="/error-words">查看易错单词库</a>
+  </div>
+</div>
+{{template "footer" .}}

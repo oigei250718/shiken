@@ -1,0 +1,55 @@
+{{template "header" .}}
+<h1>{{.Title}}</h1>
+<form class="form" method="post" action="{{.Action}}" data-quick-save>
+  <div class="form-row form-inline">
+    <div>
+      <label>语法格式 <span class="required">*</span></label>
+      <input type="text" name="format" value="{{.Grammar.Format}}" required placeholder="例：〜によって" autofocus>
+    </div>
+    <div>
+      <label>级别（1 最简单 ~ 5 最困难）</label>
+      <select name="level">
+        {{range $i := iterate 5}}
+        <option value="{{$i}}" {{if eq $i $.Grammar.Level}}selected{{end}}>{{$i}} - {{levelBadge $i}}</option>
+        {{end}}
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <label>语法含义与例句（每个含义可配多个例句，一行一个）</label>
+    <div id="grammar-meanings">
+      {{range .Grammar.Meanings}}
+      <div class="meaning-block">
+        <div class="dyn-row">
+          <input type="text" name="meaning_texts[]" value="{{.Text}}" placeholder="含义">
+          <button type="button" class="btn btn-small btn-danger" onclick="removeMeaningBlock(this)">×</button>
+        </div>
+        <textarea name="meaning_examples[]" rows="2" placeholder="该含义的例句，一行一个">{{range $j, $e := .Examples}}{{if $j}}&#10;{{end}}{{$e}}{{end}}</textarea>
+      </div>
+      {{end}}
+    </div>
+    <button type="button" class="btn btn-small" onclick="addMeaningBlock('grammar-meanings')">+ 添加含义</button>
+  </div>
+  <div class="form-row">
+    <label>关联语法（搜索语法库后点击添加，可多选）</label>
+    <div id="related-picker" data-exclude="{{.Grammar.ID}}" data-api="/api/grammars/search">
+      <div id="related-chips" class="chip-box">
+        {{range .Grammar.Related}}
+        <span class="chip" data-id="{{.ID}}">
+          <span class="jp">{{.Format}}</span>
+          <input type="hidden" name="related_ids[]" value="{{.ID}}">
+          <button type="button" class="chip-remove" onclick="removeRelatedChip(this)">×</button>
+        </span>
+        {{end}}
+      </div>
+      <input type="text" id="related-search" placeholder="输入关键字搜索语法（格式 / 含义 / 例句）..." autocomplete="off">
+      <div id="related-results" class="rel-results" style="display:none"></div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">保存</button>
+    <span class="muted kbd-hint">⌘+Enter 快捷保存</span>
+    <a class="btn" href="/grammars">取消</a>
+  </div>
+</form>
+{{template "footer" .}}

@@ -1,0 +1,27 @@
+{{template "header" .}}
+<h1>单词测试</h1>
+<form class="form" method="get" action="/test/run">
+  <div class="form-row">
+    <label>选择难度级别（可多选）</label>
+    <div class="level-checks">
+      {{range $i := iterate 5}}
+      <label class="checkbox-label">
+        <input type="checkbox" name="level" value="{{$i}}" checked>
+        L{{$i}} {{levelBadge $i}}（{{index $.Counts $i}} 个）
+      </label>
+      {{end}}
+    </div>
+  </div>
+  <div class="form-row">
+    <label>测试模式（展示该属性，回忆其余）</label>
+    <div class="level-checks">
+      <label class="checkbox-label"><input type="radio" name="mode" value="word" checked> 根据单词</label>
+      <label class="checkbox-label"><input type="radio" name="mode" value="kana"> 根据单词假名</label>
+      <label class="checkbox-label"><input type="radio" name="mode" value="meaning"> 根据单词含义</label>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">开始测试（随机 20 个）</button>
+  </div>
+</form>
+{{template "footer" .}}

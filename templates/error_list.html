@@ -1,0 +1,32 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>易错单词库</h1>
+  <a class="btn btn-primary" href="/error-words/add">+ 手动添加</a>
+</div>
+<p class="muted">来源：单词测试中点击“不认识”的单词，或手动添加。共 {{.Page.Count}} 个。</p>
+<table class="table">
+  <thead>
+    <tr><th>单词</th><th>假名</th><th>含义</th><th>级别</th><th>操作</th></tr>
+  </thead>
+  <tbody>
+    {{range .Items}}
+    <tr>
+      <td><a href="/words/{{.ID}}" class="item-title jp">{{.Word}}</a></td>
+      <td class="jp muted">{{.Kana}}</td>
+      <td class="cell-meanings">{{range .Meanings}}<div>{{.Text}}</div>{{end}}</td>
+      <td><span class="tag tag-level">L{{.Level}}</span></td>
+      <td>
+        <button class="btn btn-small btn-danger" type="submit" form="del-ew-{{.ID}}"
+          onclick="return confirm('确定从易错库中移除该单词吗？')">删除</button>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="empty">易错单词库为空</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{range .Items}}
+<form id="del-ew-{{.ID}}" method="post" action="/error-words/{{.ID}}/delete"></form>
+{{end}}
+{{template "pagination" .Page}}
+{{template "footer" .}}

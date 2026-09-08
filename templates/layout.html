@@ -1,0 +1,37 @@
+{{define "header"}}
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{if .Title}}{{.Title}} - {{end}}日语学习系统</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<nav class="nav">
+  <a class="nav-brand" href="/">日语学习</a>
+  <a href="/words">单词</a>
+  <a href="/grammars">语法</a>
+  <a href="/grammars/review">语法复习</a>
+  <a href="/test">单词测试</a>
+  <a href="/error-words">易错单词</a>
+</nav>
+<main class="container">
+{{end}}
+
+{{define "footer"}}
+</main>
+<script src="/static/app.js"></script>
+</body>
+</html>
+{{end}}
+
+{{define "pagination"}}
+{{if gt .Total 1}}
+<div class="pagination">
+  {{if .HasPrev}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{sub .Current 1}}">上一页</a>{{end}}
+  <span>第 {{.Current}} / {{.Total}} 页</span>
+  {{if .HasNext}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{add .Current 1}}">下一页</a>{{end}}
+</div>
+{{end}}
+{{end}}

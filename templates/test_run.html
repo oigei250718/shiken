@@ -1,0 +1,29 @@
+{{template "header" .}}
+{{if .Empty}}
+<h1>单词测试</h1>
+<p class="empty">所选级别下没有单词，<a href="/words/new">先去录入单词</a>，或<a href="/test">重新选择级别</a>。</p>
+{{else}}
+<h1>单词测试</h1>
+<div class="test-progress">
+  <span id="test-counter">1 / {{.Total}}</span>
+  <div class="progress-bar"><div id="progress-fill" style="width:0%"></div></div>
+</div>
+<div class="test-card">
+  <div class="test-mode-hint" id="test-mode-hint"></div>
+  <div class="test-prompt jp" id="test-prompt"></div>
+  <div class="test-answer" id="test-answer" style="display:none"></div>
+</div>
+<div class="action-bar test-actions">
+  <button class="btn" id="btn-peek" type="button">查看其余属性</button>
+  <a class="btn" id="btn-detail" href="#" target="_blank">详情</a>
+  <button class="btn btn-success" id="btn-known" type="button">认识</button>
+  <button class="btn btn-danger" id="btn-unknown" type="button">不认识</button>
+</div>
+<p class="muted">提示：点击“不认识”会将该单词加入易错单词库。</p>
+<script>
+window.TEST_WORDS = JSON.parse({{.WordsJSON}});
+window.TEST_MODE = "{{.Mode}}";
+document.addEventListener('DOMContentLoaded', function () { initTest(); });
+</script>
+{{end}}
+{{template "footer" .}}

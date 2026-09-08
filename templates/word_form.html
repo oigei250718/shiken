@@ -1,0 +1,65 @@
+{{template "header" .}}
+<h1>{{.Title}}</h1>
+{{if .Saved}}
+<div class="alert alert-success">
+  单词「<span class="jp">{{.Saved}}</span>」已保存 ✓ 可以继续录入下一个
+  <a href="/words/{{.SavedID}}">查看详情 →</a>
+</div>
+{{end}}
+<form class="form" method="post" action="{{.Action}}" data-quick-save>
+  <div class="form-row form-inline">
+    <div>
+      <label>单词 <span class="required">*</span></label>
+      <input type="text" name="word" value="{{.Word.Word}}" required placeholder="例：食べる" autofocus>
+    </div>
+    <div>
+      <label>单词假名</label>
+      <input type="text" name="kana" value="{{.Word.Kana}}" placeholder="例：たべる">
+    </div>
+    <div>
+      <label>级别</label>
+      <select name="level">
+        {{range $i := iterate 5}}
+        <option value="{{$i}}" {{if eq $i $.Word.Level}}selected{{end}}>{{$i}} - {{levelBadge $i}}</option>
+        {{end}}
+      </select>
+    </div>
+  </div>
+  <div class="form-row">
+    <label>单词含义与例句（每个含义可配多个例句，一行一个）</label>
+    <div id="word-meanings">
+      {{range .Word.Meanings}}
+      <div class="meaning-block">
+        <div class="dyn-row">
+          <input type="text" name="meaning_texts[]" value="{{.Text}}" placeholder="含义">
+          <button type="button" class="btn btn-small btn-danger" onclick="removeMeaningBlock(this)">×</button>
+        </div>
+        <textarea name="meaning_examples[]" rows="2" placeholder="该含义的例句，一行一个">{{range $j, $e := .Examples}}{{if $j}}&#10;{{end}}{{$e}}{{end}}</textarea>
+      </div>
+      {{end}}
+    </div>
+    <button type="button" class="btn btn-small" onclick="addWordMeaningBlock()">+ 添加含义</button>
+  </div>
+  <div class="form-row">
+    <label>关联单词（搜索单词库后点击添加，可多选）</label>
+    <div id="related-picker" data-exclude="{{.Word.ID}}">
+      <div id="related-chips" class="chip-box">
+        {{range .Word.Related}}
+        <span class="chip" data-id="{{.ID}}">
+          <span class="jp">{{.Word}}{{if .Kana}}（{{.Kana}}）{{end}}</span>
+          <input type="hidden" name="related_ids[]" value="{{.ID}}">
+          <button type="button" class="chip-remove" onclick="removeRelatedChip(this)">×</button>
+        </span>
+        {{end}}
+      </div>
+      <input type="text" id="related-search" placeholder="输入关键字搜索单词（单词 / 假名 / 含义）..." autocomplete="off">
+      <div id="related-results" class="rel-results" style="display:none"></div>
+    </div>
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">保存</button>
+    <span class="muted kbd-hint">⌘+Enter 快捷保存</span>
+    <a class="btn" href="/words">取消</a>
+  </div>
+</form>
+{{template "footer" .}}

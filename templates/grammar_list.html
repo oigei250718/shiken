@@ -1,0 +1,55 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>语法列表</h1>
+  <a class="btn btn-primary" href="/grammars/new">+ 录入语法</a>
+</div>
+<form class="search-bar" method="get" action="/grammars">
+  <input type="text" name="q" value="{{.Page.Query}}" placeholder="搜索语法格式 / 含义 / 例句...">
+  <button class="btn" type="submit">搜索</button>
+  {{if .Page.Query}}<a class="btn btn-plain" href="/grammars">清除</a>{{end}}
+</form>
+<form method="post" action="/grammars/delete" onsubmit="return confirm('确定删除选中的语法吗？关联关系也会被删除。')">
+<table class="table">
+  <thead>
+    <tr>
+      <th class="col-check"><input type="checkbox" onclick="toggleAll(this)"></th>
+      <th>语法格式</th>
+      <th>语法含义</th>
+      <th>级别</th>
+      <th>录入时间</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Items}}
+    <tr>
+      <td><input type="checkbox" name="ids" value="{{.ID}}"></td>
+      <td>
+        <a href="/grammars/{{.ID}}" class="item-title">{{.Format}}</a>
+      </td>
+      <td class="cell-meanings">{{range .Meanings}}{{if .Text}}<div>{{.Text}}</div>{{end}}{{end}}</td>
+      <td><span class="tag tag-level">L{{.Level}}</span></td>
+      <td class="cell-time">{{.CreatedAt}}</td>
+      <td class="cell-actions">
+        <a class="btn btn-small" href="/grammars/{{.ID}}/edit">编辑</a>
+        <button class="btn btn-small btn-danger" type="submit" form="del-g-{{.ID}}"
+          onclick="return confirm('确定删除这条语法吗？')">删除</button>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="6" class="empty">暂无语法，<a href="/grammars/new">去录入</a></td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{if .Items}}
+<div class="list-footer">
+  <button class="btn btn-danger" type="submit">删除选中</button>
+  <span class="muted">共 {{.Page.Count}} 条</span>
+</div>
+{{end}}
+</form>
+{{range .Items}}
+<form id="del-g-{{.ID}}" method="post" action="/grammars/{{.ID}}/delete"></form>
+{{end}}
+{{template "pagination" .Page}}
+{{template "footer" .}}
