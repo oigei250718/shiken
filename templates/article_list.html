@@ -1,0 +1,48 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>文章列表</h1>
+  <a class="btn btn-primary" href="/articles/new">+ 录入文章</a>
+</div>
+<form class="search-bar" method="get" action="/articles">
+  <input type="text" name="q" value="{{.Page.Query}}" placeholder="搜索标题 / 内容...">
+  <button class="btn" type="submit">搜索</button>
+  {{if .Page.Query}}<a class="btn btn-plain" href="/articles">清除</a>{{end}}
+</form>
+<table class="table">
+  <thead>
+    <tr>
+      <th>标题</th>
+      <th>内容摘要</th>
+      <th>创建时间</th>
+      <th>更新时间</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Items}}
+    <tr>
+      <td><a href="/articles/{{.ID}}" class="item-title jp">{{.Title}}</a></td>
+      <td class="cell-excerpt">{{.Excerpt}}</td>
+      <td class="cell-time">{{minute .CreatedAt}}</td>
+      <td class="cell-time">{{minute .UpdatedAt}}</td>
+      <td class="cell-actions">
+        <a class="btn btn-small" href="/articles/{{.ID}}/edit">编辑</a>
+        <button class="btn btn-small btn-danger" type="submit" form="del-a-{{.ID}}"
+          onclick="return confirm('确定删除这篇文章吗？')">删除</button>
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="5" class="empty">暂无文章，<a href="/articles/new">去录入</a></td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{if .Items}}
+<div class="list-footer">
+  <span class="muted">共 {{.Page.Count}} 条</span>
+</div>
+{{end}}
+{{range .Items}}
+<form id="del-a-{{.ID}}" method="post" action="/articles/{{.ID}}/delete"></form>
+{{end}}
+{{template "pagination" .Page}}
+{{template "footer" .}}

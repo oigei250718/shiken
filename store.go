@@ -646,3 +646,64 @@ func searchWordsNotInError(q string) ([]Word, error) {
 	}
 	return out, rows.Err()
 }
+
+// ==================== 文章 ====================
+
+// listArticles 文章列表（按创建时间降序），q 匹配标题或内容
+func listArticles(q string, page int) ([]Article, int, error) {
+	where := ""
+	args := []any{}
+	if q != "" {
+		like := "%" + q + "%"
+		where = "WHERE title LIKE ? OR content LIKE ?"
+		args = append(args, like, like)
+	}
+	var total int
+	if err := db.QueryRow(`SELECT COUNT(*) FROM articles `+where, args...).Scan(&total); err != nil {
+		return nil, 0, err
+	}
+	offset := (page - 1) * pageSize
+	rows, err := db.Query(`SELECT id, title, content, created_at, updated_at FROM articles `+where+
+		` ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?`, append(args, pageSize, offset)...)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+	var out []Article
+	for rows.Next() {
+		var a Article
+		if err := rows.Scan(&a.ID, &a.Title, &a.Content, &a.CreatedAt, &a.UpdatedAt); err != nil {
+			return nil, 0, err
+		}
+		out = append(out, a)
+	}
+	return out, total, rows.Err()
+}
+
+func getArticle(id int64) (Article, error) {
+	var a Article
+	err := db.QueryRow(`SELECT id, title, content, created_at, updated_at FROM articles WHERE id=?`, id).
+		Scan(&a.ID, &a.Title, &a.Content, &a.CreatedAt, &a.UpdatedAt)
+	return a, err
+}
+
+func createArticle(a *Article) (int64, error) {
+	now := now()
+	res, err := db.Exec(`INSERT INTO articles (title, content, created_at, updated_at) VALUES (?, ?, ?, ?)`,
+		a.Title, a.Content, now, now)
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+func updateArticle(a *Article) error {
+	_, err := db.Exec(`UPDATE articles SET title=?, content=?, updated_at=? WHERE id=?`,
+		a.Title, a.Content, now(), a.ID)
+	return err
+}
+
+func deleteArticle(id int64) error {
+	_, err := db.Exec(`DELETE FROM articles WHERE id=?`, id)
+	return err
+}

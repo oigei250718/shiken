@@ -1,6 +1,9 @@
 package main
 
-import "html/template"
+import (
+	"html/template"
+	"strings"
+)
 
 // Meaning 单词的一个含义及其例句
 type Meaning struct {
@@ -52,6 +55,24 @@ type Grammar struct {
 	Related   []GrammarRef
 	CreatedAt string
 	UpdatedAt string
+}
+
+// Article 文章
+type Article struct {
+	ID        int64
+	Title     string
+	Content   string
+	CreatedAt string
+	UpdatedAt string
+}
+
+// Excerpt 内容摘要（列表页用），换行替换为空格，最多 80 字
+func (a *Article) Excerpt() string {
+	runes := []rune(strings.ReplaceAll(a.Content, "\n", " "))
+	if len(runes) > 80 {
+		return string(runes[:80]) + "…"
+	}
+	return string(runes)
 }
 
 // Page 分页信息

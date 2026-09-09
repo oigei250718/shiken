@@ -71,6 +71,15 @@ func main() {
 	mux.HandleFunc("POST /grammars/{id}/relations", handleGrammarRelateAdd)
 	mux.HandleFunc("POST /grammars/{id}/relations/{rid}/delete", handleGrammarRelateDelete)
 
+	// 文章
+	mux.HandleFunc("GET /articles", handleArticleList)
+	mux.HandleFunc("GET /articles/new", handleArticleNew)
+	mux.HandleFunc("POST /articles", handleArticleCreate)
+	mux.HandleFunc("GET /articles/{id}", handleArticleDetail)
+	mux.HandleFunc("GET /articles/{id}/edit", handleArticleEdit)
+	mux.HandleFunc("POST /articles/{id}", handleArticleUpdate)
+	mux.HandleFunc("POST /articles/{id}/delete", handleArticleDelete)
+
 	// 单词
 	mux.HandleFunc("GET /words", handleWordList)
 	mux.HandleFunc("GET /words/new", handleWordNew)

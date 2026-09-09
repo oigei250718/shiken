@@ -76,11 +76,13 @@ func splitComma(s string) []string {
 }
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
-	var wordCount, grammarCount, errorCount int
+	var wordCount, grammarCount, errorCount, articleCount int
 	_ = db.QueryRow(`SELECT COUNT(*) FROM words`).Scan(&wordCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM grammars`).Scan(&grammarCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM error_words`).Scan(&errorCount)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM articles`).Scan(&articleCount)
 	render(w, "home.html", map[string]any{
 		"WordCount": wordCount, "GrammarCount": grammarCount, "ErrorCount": errorCount,
+		"ArticleCount": articleCount,
 	})
 }

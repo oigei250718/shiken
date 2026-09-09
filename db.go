@@ -110,4 +110,14 @@ CREATE TABLE IF NOT EXISTS grammar_relations (
   b INT UNSIGNED NOT NULL,
   PRIMARY KEY (a, b)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS articles (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  title      VARCHAR(255) NOT NULL,
+  content    MEDIUMTEXT NOT NULL,
+  created_at VARCHAR(19) NOT NULL,
+  updated_at VARCHAR(19) NOT NULL,
+  PRIMARY KEY (id),
+  KEY idx_articles_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `

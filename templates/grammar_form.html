@@ -1,5 +1,11 @@
 {{template "header" .}}
 <h1>{{.Title}}</h1>
+{{if .Saved}}
+<div class="alert alert-success">
+  语法「<span class="jp">{{.Saved}}</span>」已保存 ✓ 可以继续录入下一个
+  <a href="/grammars/{{.SavedID}}">查看详情 →</a>
+</div>
+{{end}}
 <form class="form" method="post" action="{{.Action}}" data-quick-save>
   <div class="form-row form-inline">
     <div>

@@ -1,12 +1,16 @@
-// 录入页快捷键：⌘+Enter（兼容 Ctrl+Enter）提交表单
+// 录入页快捷键：⌘+Enter（兼容 Ctrl+Enter）提交表单；普通回车不提交，直接忽略
 document.addEventListener('keydown', function (e) {
-  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-    var form = document.querySelector('form[data-quick-save]');
-    if (form) {
-      e.preventDefault();
-      form.requestSubmit();
-    }
+  if (e.key !== 'Enter') return;
+  var form = document.querySelector('form[data-quick-save]');
+  if (!form || !form.contains(e.target)) return;
+  if (e.metaKey || e.ctrlKey) {
+    e.preventDefault();
+    form.requestSubmit();
+    return;
   }
+  // 普通回车：在输入框 / 下拉框中按回车不做任何事（textarea 中的回车仍为换行）
+  var tag = e.target.tagName;
+  if (tag === 'INPUT' || tag === 'SELECT') e.preventDefault();
 });
 
 // 全选/取消全选

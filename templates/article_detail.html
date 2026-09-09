@@ -1,0 +1,17 @@
+{{template "header" .}}
+<div class="action-bar">
+  <a class="btn" href="/articles">← 返回列表</a>
+  <a class="btn" href="/articles/{{.Article.ID}}/edit">编辑</a>
+  <button class="btn btn-danger" type="submit" form="del-article"
+    onclick="return confirm('确定删除这篇文章吗？')">删除</button>
+</div>
+<div class="detail-card">
+  <div class="detail-title jp">{{.Article.Title}}</div>
+  <div class="article-content jp">{{.Article.Content}}</div>
+  <div class="detail-meta">
+    <span>创建：{{.Article.CreatedAt}}</span>
+    <span>更新：{{.Article.UpdatedAt}}</span>
+  </div>
+</div>
+<form id="del-article" method="post" action="/articles/{{.Article.ID}}/delete"></form>
+{{template "footer" .}}

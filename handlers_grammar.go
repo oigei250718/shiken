@@ -24,6 +24,8 @@ func handleGrammarNew(w http.ResponseWriter, r *http.Request) {
 	render(w, "grammar_form.html", map[string]any{
 		"Title": "录入语法", "Action": "/grammars",
 		"Grammar": Grammar{Level: 3, Meanings: []Meaning{{}}},
+		"Saved":   r.URL.Query().Get("saved"),
+		"SavedID": r.URL.Query().Get("id"),
 	})
 }
 
@@ -63,7 +65,8 @@ func handleGrammarCreate(w http.ResponseWriter, r *http.Request) {
 	for _, rid := range relatedGrammarIDsFromForm(r) {
 		_ = addGrammarRelation(id, rid)
 	}
-	http.Redirect(w, r, "/grammars/"+strconv.FormatInt(id, 10), http.StatusSeeOther)
+	// 保存后回到录入页，方便连续录入；附带去详情页的链接
+	http.Redirect(w, r, "/grammars/new?saved="+url.QueryEscape(g.Format)+"&id="+strconv.FormatInt(id, 10), http.StatusSeeOther)
 }
 
 func handleGrammarDetail(w http.ResponseWriter, r *http.Request) {
