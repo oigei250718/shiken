@@ -17,7 +17,7 @@
     <div class="meaning-item">
       <div class="meaning-text">{{add $i 1}}. {{if $m.Text}}{{$m.Text}}{{else}}<span class="muted">（无含义）</span>{{end}}</div>
       {{if $m.Examples}}
-      <ul>{{range $m.Examples}}<li class="jp">{{.}}</li>{{end}}</ul>
+      <ul>{{range $m.Examples}}<li class="jp markdown">{{markdown .}}</li>{{end}}</ul>
       {{end}}
     </div>
     {{else}}<p class="muted">无</p>{{end}}

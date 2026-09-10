@@ -30,7 +30,7 @@
           <input type="text" name="meaning_texts[]" value="{{.Text}}" placeholder="含义">
           <button type="button" class="btn btn-small btn-danger" onclick="removeMeaningBlock(this)">×</button>
         </div>
-        <textarea name="meaning_examples[]" rows="2" placeholder="该含义的例句，一行一个">{{range $j, $e := .Examples}}{{if $j}}&#10;{{end}}{{$e}}{{end}}</textarea>
+        <textarea name="meaning_examples[]" rows="2" class="lined" data-max-height="300" wrap="off" placeholder="该含义的例句，一行一个">{{range $j, $e := .Examples}}{{if $j}}&#10;{{end}}{{$e}}{{end}}</textarea>
       </div>
       {{end}}
     </div>

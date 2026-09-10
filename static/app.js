@@ -20,6 +20,48 @@ function toggleAll(master) {
   });
 }
 
+// 带行号的多行输入框：自动调整高度；超过上限出现滚动条并同步行号；初始内容过长时滚动到末尾
+function initLinedTextarea(ta) {
+  if (ta.getAttribute('data-lined') === '1') return;
+  ta.setAttribute('data-lined', '1');
+
+  var max = parseInt(ta.getAttribute('data-max-height') || '360', 10);
+  var wrap = document.createElement('div');
+  wrap.className = 'editor';
+  ta.parentNode.insertBefore(wrap, ta);
+  var gutter = document.createElement('div');
+  gutter.className = 'editor-gutter';
+  wrap.appendChild(gutter);
+  wrap.appendChild(ta);
+
+  function update() {
+    // 行号 = 逻辑行数
+    var lines = ta.value.split('\n').length;
+    if (gutter.childElementCount !== lines) {
+      var html = '';
+      for (var i = 1; i <= lines; i++) html += '<span>' + i + '</span>';
+      gutter.innerHTML = html;
+    }
+    // 自动高度：随内容增长，超过 max 后固定并出滚动条
+    ta.style.height = 'auto';
+    var h = Math.max(66, Math.min(ta.scrollHeight, max));
+    ta.style.height = h + 'px';
+    ta.style.overflowY = ta.scrollHeight > max ? 'auto' : 'hidden';
+    gutter.style.height = h + 'px';
+    gutter.scrollTop = ta.scrollTop;
+  }
+
+  ta.addEventListener('input', update);
+  ta.addEventListener('scroll', function () {
+    gutter.scrollTop = ta.scrollTop;
+  });
+  update();
+  // 内容超出可视高度时，默认滚动展示末尾
+  if (ta.scrollHeight > max) ta.scrollTop = ta.scrollHeight;
+}
+
+document.querySelectorAll('textarea.lined').forEach(initLinedTextarea);
+
 // 动态含义块（含义 + 例句 textarea），单词/语法表单共用
 function addMeaningBlock(containerId) {
   var c = document.getElementById(containerId);
@@ -42,10 +84,14 @@ function addMeaningBlock(containerId) {
   var ta = document.createElement('textarea');
   ta.name = 'meaning_examples[]';
   ta.rows = 2;
+  ta.className = 'lined';
+  ta.setAttribute('data-max-height', '300');
+  ta.setAttribute('wrap', 'off');
   ta.placeholder = '该含义的例句，一行一个';
   div.appendChild(row);
   div.appendChild(ta);
   c.appendChild(div);
+  initLinedTextarea(ta);
   input.focus();
 }
 function addWordMeaningBlock() {

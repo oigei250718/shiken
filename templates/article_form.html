@@ -13,7 +13,7 @@
   </div>
   <div class="form-row">
     <label>内容</label>
-    <textarea name="content" rows="16" placeholder="文章内容...">{{.Article.Content}}</textarea>
+    <textarea name="content" rows="16" class="lined" data-max-height="600" wrap="off" placeholder="文章内容（支持 Markdown）...">{{.Article.Content}}</textarea>
   </div>
   <div class="form-actions">
     <button class="btn btn-primary" type="submit">保存</button>

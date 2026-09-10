@@ -1,11 +1,15 @@
 package main
 
 import (
+	"bytes"
 	"embed"
 	"html/template"
 	"log"
 	"net/http"
 	"os"
+
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
 )
 
 //go:embed templates static
@@ -13,10 +17,23 @@ var assets embed.FS
 
 var tmpl *template.Template
 
+// mdEngine Markdown 渲染器（含 GFM：表格 / 删除线 / 任务列表 / 自动链接）
+var mdEngine = goldmark.New(goldmark.WithExtensions(extension.GFM))
+
+// renderMarkdown 把 Markdown 文本渲染为 HTML（用于详情页展示）
+func renderMarkdown(s string) template.HTML {
+	var buf bytes.Buffer
+	if err := mdEngine.Convert([]byte(s), &buf); err != nil {
+		return template.HTML(template.HTMLEscapeString(s))
+	}
+	return template.HTML(buf.String())
+}
+
 var funcMap = template.FuncMap{
 	"add": func(a, b int) int { return a + b },
 	"sub": func(a, b int) int { return a - b },
 	"mul": func(a, b int) int { return a * b },
+	"markdown": renderMarkdown,
 	"minute": func(s string) string { // 时间精确到分钟
 		if len(s) > 16 {
 			return s[:16]

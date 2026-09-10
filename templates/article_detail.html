@@ -7,7 +7,7 @@
 </div>
 <div class="detail-card">
   <div class="detail-title jp">{{.Article.Title}}</div>
-  <div class="article-content jp">{{.Article.Content}}</div>
+  <div class="article-content markdown jp">{{markdown .Article.Content}}</div>
   <div class="detail-meta">
     <span>创建：{{.Article.CreatedAt}}</span>
     <span>更新：{{.Article.UpdatedAt}}</span>
