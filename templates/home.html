@@ -19,9 +19,11 @@
   </a>
 </div>
 <div class="cards">
+  {{if .User.CanEdit}}
   <a class="card card-action" href="/words/new">录入单词</a>
   <a class="card card-action" href="/grammars/new">录入语法</a>
   <a class="card card-action" href="/articles/new">录入文章</a>
+  {{end}}
   <a class="card card-action" href="/grammars/review">语法复习</a>
   <a class="card card-action" href="/test">单词测试</a>
 </div>

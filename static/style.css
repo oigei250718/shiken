@@ -295,3 +295,41 @@ h3 { font-size: 15px; color: #556; margin-bottom: 6px; }
 .markdown img { max-width: 100%; }
 .markdown hr { border: none; border-top: 1px solid #e4e8ef; margin: 14px 0; }
 .markdown > *:first-child { margin-top: 0; }
+
+/* ---- 登录页 ---- */
+.login-wrap {
+  max-width: 380px; margin: 8vh auto 0; padding: 28px 30px;
+  background: #fff; border: 1px solid #e4e8ef; border-radius: 14px;
+  box-shadow: 0 6px 24px rgba(40, 70, 120, 0.08); text-align: center;
+}
+.login-wrap h1 { font-size: 22px; margin: 0 0 22px; color: #2b3a55; }
+.login-form { display: flex; flex-direction: column; gap: 14px; text-align: left; }
+.login-form label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #445; font-weight: 500; }
+.login-form input {
+  padding: 10px 12px; border: 1px solid #d0d7e2; border-radius: 8px;
+  font-size: 15px; outline: none; transition: border-color .15s;
+}
+.login-form input:focus { border-color: #3a6fd8; }
+.login-form .btn-primary { width: 100%; padding: 11px; font-size: 15px; margin-top: 4px; }
+
+/* ---- 通用提示 ---- */
+.alert { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 8px; }
+.alert-error { background: #fdecea; color: #b23b34; border: 1px solid #f5c6c0; }
+
+/* ---- 顶部导航用户区 ---- */
+.nav-user { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; font-size: 14px; color: #445; }
+.nav-user .username { font-weight: 600; color: #2b3a55; }
+.nav-user .role { color: #7a86a0; }
+.nav-logout { padding: 6px 12px; font-size: 13px; }
+
+/* ---- 用户管理内联表单 ---- */
+.inline-form { display: inline-flex; align-items: center; gap: 6px; margin: 0; }
+.inline-form select { padding: 5px 8px; border: 1px solid #d0d7e2; border-radius: 6px; font-size: 13px; }
+.user-form { max-width: 420px; display: flex; flex-direction: column; gap: 16px; }
+.user-form label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: #445; font-weight: 500; }
+.user-form input, .user-form select {
+  padding: 10px 12px; border: 1px solid #d0d7e2; border-radius: 8px;
+  font-size: 15px; outline: none; transition: border-color .15s;
+}
+.user-form input:focus, .user-form select:focus { border-color: #3a6fd8; }
+.form-actions { display: flex; gap: 10px; align-items: center; margin-top: 4px; }

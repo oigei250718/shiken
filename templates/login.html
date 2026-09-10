@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>登录 - 日语学习系统</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main class="container login-wrap">
+  <h1>日语学习系统</h1>
+  <form class="login-form" method="post" action="/login">
+    {{if .Error}}<div class="alert alert-error">{{.Error}}</div>{{end}}
+    <label>用户名<input type="text" name="username" value="{{.Username}}" autofocus></label>
+    <label>密码<input type="password" name="password"></label>
+    <button class="btn btn-primary" type="submit">登录</button>
+  </form>
+</main>
+</body>
+</html>

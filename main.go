@@ -54,6 +54,17 @@ var funcMap = template.FuncMap{
 		}
 		return ""
 	},
+	"roleLabel": func(role string) string {
+		switch role {
+		case "root":
+			return "根用户"
+		case "admin":
+			return "管理员"
+		case "user":
+			return "普通用户"
+		}
+		return role
+	},
 }
 
 func main() {
@@ -71,62 +82,76 @@ func main() {
 
 	mux := http.NewServeMux()
 
-	// 首页
-	mux.HandleFunc("GET /{$}", handleHome)
-
-	// 语法
-	mux.HandleFunc("GET /grammars", handleGrammarList)
-	mux.HandleFunc("GET /grammars/new", handleGrammarNew)
-	mux.HandleFunc("POST /grammars", handleGrammarCreate)
-	mux.HandleFunc("POST /grammars/delete", handleGrammarBatchDelete)
-	mux.HandleFunc("GET /grammars/review", handleGrammarReview)
-	mux.HandleFunc("GET /grammars/{id}", handleGrammarDetail)
-	mux.HandleFunc("GET /grammars/{id}/edit", handleGrammarEdit)
-	mux.HandleFunc("POST /grammars/{id}", handleGrammarUpdate)
-	mux.HandleFunc("POST /grammars/{id}/delete", handleGrammarDelete)
-	mux.HandleFunc("GET /grammars/{id}/relate", handleGrammarRelatePage)
-	mux.HandleFunc("POST /grammars/{id}/relations", handleGrammarRelateAdd)
-	mux.HandleFunc("POST /grammars/{id}/relations/{rid}/delete", handleGrammarRelateDelete)
-
-	// 文章
-	mux.HandleFunc("GET /articles", handleArticleList)
-	mux.HandleFunc("GET /articles/new", handleArticleNew)
-	mux.HandleFunc("POST /articles", handleArticleCreate)
-	mux.HandleFunc("GET /articles/{id}", handleArticleDetail)
-	mux.HandleFunc("GET /articles/{id}/edit", handleArticleEdit)
-	mux.HandleFunc("POST /articles/{id}", handleArticleUpdate)
-	mux.HandleFunc("POST /articles/{id}/delete", handleArticleDelete)
-
-	// 单词
-	mux.HandleFunc("GET /words", handleWordList)
-	mux.HandleFunc("GET /words/new", handleWordNew)
-	mux.HandleFunc("POST /words", handleWordCreate)
-	mux.HandleFunc("POST /words/delete", handleWordBatchDelete)
-	mux.HandleFunc("GET /words/{id}", handleWordDetail)
-	mux.HandleFunc("GET /words/{id}/edit", handleWordEdit)
-	mux.HandleFunc("POST /words/{id}", handleWordUpdate)
-	mux.HandleFunc("POST /words/{id}/delete", handleWordDelete)
-	mux.HandleFunc("GET /words/{id}/relate", handleWordRelatePage)
-	mux.HandleFunc("POST /words/{id}/relations", handleWordRelateAdd)
-	mux.HandleFunc("POST /words/{id}/relations/{rid}/delete", handleWordRelateDelete)
-
-	// 单词测试
-	mux.HandleFunc("GET /test", handleTestSetup)
-	mux.HandleFunc("GET /test/run", handleTestRun)
-	mux.HandleFunc("POST /test/finish", handleTestFinish)
-	mux.HandleFunc("GET /test/result", handleTestResult)
-
-	// 易错单词
-	mux.HandleFunc("GET /error-words", handleErrorWordList)
-	mux.HandleFunc("GET /error-words/add", handleErrorWordAddPage)
-	mux.HandleFunc("POST /error-words/add", handleErrorWordAdd)
-	mux.HandleFunc("POST /error-words/{id}/delete", handleErrorWordDelete)
-
+	// 公开路由：登录 / 静态资源
+	mux.HandleFunc("GET /login", handleLoginGet)
+	mux.HandleFunc("POST /login", handleLoginPost)
+	mux.HandleFunc("POST /logout", handleLogout)
 	mux.Handle("GET /static/", http.FileServerFS(assets))
 
+	// 用户管理（仅 root）
+	mux.HandleFunc("GET /users", requireRoot(handleUserList))
+	mux.HandleFunc("GET /users/new", requireRoot(handleUserNew))
+	mux.HandleFunc("POST /users", requireRoot(handleUserCreate))
+	mux.HandleFunc("POST /users/{id}/delete", requireRoot(handleUserDelete))
+	mux.HandleFunc("POST /users/{id}/role", requireRoot(handleUserRole))
+	mux.HandleFunc("POST /users/{id}/toggle", requireRoot(handleUserToggle))
+	mux.HandleFunc("POST /users/{id}/reset", requireRoot(handleUserReset))
+
+	// 业务路由：全部需登录
+	// 首页
+	mux.HandleFunc("GET /{$}", requireAuth(handleHome))
+
+	// 语法
+	mux.HandleFunc("GET /grammars", requireAuth(handleGrammarList))
+	mux.HandleFunc("GET /grammars/new", requireAuth(handleGrammarNew))
+	mux.HandleFunc("POST /grammars", requireAuth(handleGrammarCreate))
+	mux.HandleFunc("POST /grammars/delete", requireAuth(handleGrammarBatchDelete))
+	mux.HandleFunc("GET /grammars/review", requireAuth(handleGrammarReview))
+	mux.HandleFunc("GET /grammars/{id}", requireAuth(handleGrammarDetail))
+	mux.HandleFunc("GET /grammars/{id}/edit", requireAuth(handleGrammarEdit))
+	mux.HandleFunc("POST /grammars/{id}", requireAuth(handleGrammarUpdate))
+	mux.HandleFunc("POST /grammars/{id}/delete", requireAuth(handleGrammarDelete))
+	mux.HandleFunc("GET /grammars/{id}/relate", requireAuth(handleGrammarRelatePage))
+	mux.HandleFunc("POST /grammars/{id}/relations", requireAuth(handleGrammarRelateAdd))
+	mux.HandleFunc("POST /grammars/{id}/relations/{rid}/delete", requireAuth(handleGrammarRelateDelete))
+
+	// 文章
+	mux.HandleFunc("GET /articles", requireAuth(handleArticleList))
+	mux.HandleFunc("GET /articles/new", requireAuth(handleArticleNew))
+	mux.HandleFunc("POST /articles", requireAuth(handleArticleCreate))
+	mux.HandleFunc("GET /articles/{id}", requireAuth(handleArticleDetail))
+	mux.HandleFunc("GET /articles/{id}/edit", requireAuth(handleArticleEdit))
+	mux.HandleFunc("POST /articles/{id}", requireAuth(handleArticleUpdate))
+	mux.HandleFunc("POST /articles/{id}/delete", requireAuth(handleArticleDelete))
+
+	// 单词
+	mux.HandleFunc("GET /words", requireAuth(handleWordList))
+	mux.HandleFunc("GET /words/new", requireAuth(handleWordNew))
+	mux.HandleFunc("POST /words", requireAuth(handleWordCreate))
+	mux.HandleFunc("POST /words/delete", requireAuth(handleWordBatchDelete))
+	mux.HandleFunc("GET /words/{id}", requireAuth(handleWordDetail))
+	mux.HandleFunc("GET /words/{id}/edit", requireAuth(handleWordEdit))
+	mux.HandleFunc("POST /words/{id}", requireAuth(handleWordUpdate))
+	mux.HandleFunc("POST /words/{id}/delete", requireAuth(handleWordDelete))
+	mux.HandleFunc("GET /words/{id}/relate", requireAuth(handleWordRelatePage))
+	mux.HandleFunc("POST /words/{id}/relations", requireAuth(handleWordRelateAdd))
+	mux.HandleFunc("POST /words/{id}/relations/{rid}/delete", requireAuth(handleWordRelateDelete))
+
+	// 单词测试
+	mux.HandleFunc("GET /test", requireAuth(handleTestSetup))
+	mux.HandleFunc("GET /test/run", requireAuth(handleTestRun))
+	mux.HandleFunc("POST /test/finish", requireAuth(handleTestFinish))
+	mux.HandleFunc("GET /test/result", requireAuth(handleTestResult))
+
+	// 易错单词
+	mux.HandleFunc("GET /error-words", requireAuth(handleErrorWordList))
+	mux.HandleFunc("GET /error-words/add", requireAuth(handleErrorWordAddPage))
+	mux.HandleFunc("POST /error-words/add", requireAuth(handleErrorWordAdd))
+	mux.HandleFunc("POST /error-words/{id}/delete", requireAuth(handleErrorWordDelete))
+
 	// API
-	mux.HandleFunc("GET /api/words/search", handleWordSearchAPI)
-	mux.HandleFunc("GET /api/grammars/search", handleGrammarSearchAPI)
+	mux.HandleFunc("GET /api/words/search", requireAuth(handleWordSearchAPI))
+	mux.HandleFunc("GET /api/grammars/search", requireAuth(handleGrammarSearchAPI))
 
 	log.Println("服务已启动: http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", mux))

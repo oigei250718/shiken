@@ -29,8 +29,8 @@
       {{range .Grammar.Related}}
       <li>
         <a class="jp" href="/grammars/{{.ID}}">{{.Format}}</a>
-        <button class="btn btn-small btn-danger" type="submit" form="del-rel-{{$.Grammar.ID}}-{{.ID}}"
-          onclick="return confirm('确定删除该关联吗？')">删除关联</button>
+        {{if $.User.CanEdit}}<button class="btn btn-small btn-danger" type="submit" form="del-rel-{{$.Grammar.ID}}-{{.ID}}"
+          onclick="return confirm('确定删除该关联吗？')">删除关联</button>{{end}}
       </li>
       {{end}}
     </ul>
@@ -42,17 +42,21 @@
   </div>
 </div>
 <div class="action-bar">
+  {{if .User.CanEdit}}
   <a class="btn btn-primary" href="/grammars/{{.Grammar.ID}}/relate">关联其他语法</a>
   <a class="btn" href="/grammars/{{.Grammar.ID}}/edit">编辑</a>
   <button class="btn btn-danger" type="submit" form="del-grammar"
     onclick="return confirm('确定删除本条语法吗？关联关系也会被删除。')">删除本条语法</button>
+  {{end}}
 </div>
 <div class="prev-next">
   {{if .Prev}}<a class="btn" href="/grammars/{{.Prev}}">← 上一条</a>{{else}}<span></span>{{end}}
   {{if .Next}}<a class="btn" href="/grammars/{{.Next}}">下一条 →</a>{{else}}<span></span>{{end}}
 </div>
+{{if .User.CanEdit}}
 <form id="del-grammar" method="post" action="/grammars/{{.Grammar.ID}}/delete"></form>
 {{range .Grammar.Related}}
 <form id="del-rel-{{$.Grammar.ID}}-{{.ID}}" method="post" action="/grammars/{{$.Grammar.ID}}/relations/{{.ID}}/delete"></form>
+{{end}}
 {{end}}
 {{template "footer" .}}

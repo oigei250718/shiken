@@ -22,7 +22,7 @@ func handleTestSetup(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	render(w, "test_setup.html", map[string]any{"Counts": counts})
+	render(w, r, "test_setup.html", map[string]any{"Counts": counts})
 }
 
 type testMeaningJSON struct {
@@ -60,7 +60,7 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if len(words) == 0 {
-		render(w, "test_run.html", map[string]any{"Empty": true, "Mode": mode})
+		render(w, r, "test_run.html", map[string]any{"Empty": true, "Mode": mode})
 		return
 	}
 	payload := make([]testWordJSON, 0, len(words))
@@ -78,7 +78,7 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 	data, _ := json.Marshal(payload)
-	render(w, "test_run.html", map[string]any{
+	render(w, r, "test_run.html", map[string]any{
 		"WordsJSON": string(data), "Mode": mode, "Total": len(payload),
 	})
 }
@@ -94,7 +94,7 @@ func handleTestFinish(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, id := range body.Unknown {
-		_ = addErrorWord(id)
+		_ = addErrorWord(currentUserID(r), id)
 	}
 	ids := make([]string, 0, len(body.Unknown))
 	for _, id := range body.Unknown {
@@ -114,7 +114,7 @@ func handleTestResult(w http.ResponseWriter, r *http.Request) {
 	total, _ := strconv.Atoi(q.Get("total"))
 	unknown, _ := strconv.Atoi(q.Get("unknown"))
 	words, _ := getWordsByIDs(parseIDList(q.Get("ids")))
-	render(w, "test_result.html", map[string]any{
+	render(w, r, "test_result.html", map[string]any{
 		"Total": total, "Unknown": unknown, "Known": total - unknown,
 		"UnknownWords": words,
 	})
@@ -124,12 +124,12 @@ func handleTestResult(w http.ResponseWriter, r *http.Request) {
 
 func handleErrorWordList(w http.ResponseWriter, r *http.Request) {
 	page := parsePage(r)
-	items, total, err := listErrorWords(page)
+	items, total, err := listErrorWords(page, currentUserID(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	render(w, "error_list.html", map[string]any{
+	render(w, r, "error_list.html", map[string]any{
 		"Items": items, "Page": makePage(page, total, ""),
 	})
 }
@@ -139,18 +139,18 @@ func handleErrorWordAddPage(w http.ResponseWriter, r *http.Request) {
 	var results []Word
 	if q != "" {
 		var err error
-		results, err = searchWordsNotInError(q)
+		results, err = searchWordsNotInError(q, currentUserID(r))
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
-	render(w, "error_add.html", map[string]any{"Query": q, "Results": results})
+	render(w, r, "error_add.html", map[string]any{"Query": q, "Results": results})
 }
 
 func handleErrorWordAdd(w http.ResponseWriter, r *http.Request) {
 	id, _ := strconv.ParseInt(r.FormValue("word_id"), 10, 64)
-	if err := addErrorWord(id); err != nil {
+	if err := addErrorWord(currentUserID(r), id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
@@ -163,7 +163,7 @@ func handleErrorWordAdd(w http.ResponseWriter, r *http.Request) {
 
 func handleErrorWordDelete(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r, "id")
-	if err := deleteErrorWord(id); err != nil {
+	if err := deleteErrorWord(currentUserID(r), id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}

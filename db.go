@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"time"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -25,7 +26,42 @@ func openDB(dsn string) error {
 	if _, err = db.Exec(schema); err != nil {
 		return err
 	}
+	if err = migrate(); err != nil {
+		return err
+	}
 	return db.Ping()
+}
+
+// migrate 执行幂等的数据迁移：
+// 1. error_words 增加自增主键 id 与可空的 user_id，实现「按用户隔离易错词」
+// 2. 遗留（user_id 为空）的易错词归属 root（root 不存在时为 no-op）
+func migrate() error {
+	var cnt int
+	_ = db.QueryRow(`SELECT COUNT(*) FROM information_schema.columns
+		WHERE table_schema='shiken' AND table_name='error_words' AND column_name='user_id'`).Scan(&cnt)
+	if cnt == 0 {
+		// 旧结构 error_words 带外键 fk_error_words_word(word_id -> words)，该外键依赖主键索引，
+		// 必须在独立语句中先删除，否则 DROP PRIMARY KEY 会报 1553；且不能在同一 ALTER 内复用同名重建（报 1826）。
+		if _, err := db.Exec(`ALTER TABLE error_words DROP FOREIGN KEY fk_error_words_word`); err != nil {
+			return err
+		}
+		_, err := db.Exec(`ALTER TABLE error_words
+			DROP PRIMARY KEY,
+			ADD COLUMN id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT FIRST,
+			ADD PRIMARY KEY (id),
+			ADD COLUMN user_id INT UNSIGNED NULL AFTER word_id,
+			ADD UNIQUE KEY uk_user_word (user_id, word_id),
+			ADD KEY idx_ew_word (word_id),
+			ADD CONSTRAINT fk_error_words_word FOREIGN KEY (word_id) REFERENCES words(id) ON DELETE CASCADE,
+			ADD CONSTRAINT fk_error_words_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE`)
+		if err != nil {
+			return err
+		}
+		log.Println("migrate: error_words 已增加 user_id 与自增主键")
+	}
+	// 遗留易错词归属 root（幂等：root 不存在时子查询为 NULL，UPDATE 不生效）
+	_, _ = db.Exec(`UPDATE error_words SET user_id = (SELECT id FROM users WHERE username='root' LIMIT 1) WHERE user_id IS NULL`)
+	return nil
 }
 
 func now() string {
@@ -119,5 +155,17 @@ CREATE TABLE IF NOT EXISTS articles (
   updated_at VARCHAR(19) NOT NULL,
   PRIMARY KEY (id),
   KEY idx_articles_created (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS users (
+  id         INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  username   VARCHAR(64) NOT NULL,
+  password   VARCHAR(255) NOT NULL,
+  role       VARCHAR(16) NOT NULL DEFAULT 'user',
+  disabled   TINYINT NOT NULL DEFAULT 0,
+  created_at VARCHAR(19) NOT NULL,
+  updated_at VARCHAR(19) NOT NULL,
+  PRIMARY KEY (id),
+  UNIQUE KEY uk_username (username)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 `

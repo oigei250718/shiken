@@ -16,6 +16,9 @@
   <a href="/grammars/review">语法复习</a>
   <a href="/test">单词测试</a>
   <a href="/error-words">易错单词</a>
+  {{if .User.IsRoot}}<a href="/users">用户管理</a>{{end}}
+  <span class="nav-user">{{if .User}}{{.User.Username}}（{{roleLabel .User.Role}}）{{end}}</span>
+  {{if .User}}<form class="nav-logout" method="post" action="/logout"><button class="btn btn-small" type="submit">登出</button></form>{{end}}
 </nav>
 <main class="container">
 {{end}}

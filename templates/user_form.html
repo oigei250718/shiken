@@ -1,0 +1,21 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>{{.Title}}</h1>
+  <a class="btn" href="/users">返回列表</a>
+</div>
+<form class="user-form" method="post" action="/users">
+  {{if .Error}}<div class="alert alert-error">{{.Error}}</div>{{end}}
+  <label>用户名<input type="text" name="username" value="{{.Username}}" autofocus></label>
+  <label>角色
+    <select name="role">
+      <option value="admin">管理员</option>
+      <option value="user" selected>普通用户</option>
+    </select>
+  </label>
+  <p class="muted">初始密码为默认密码 <code>ppy0910.</code>，用户登录后由 root 在用户管理页重置。</p>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">创建</button>
+    <a class="btn" href="/users">取消</a>
+  </div>
+</form>
+{{template "footer" .}}

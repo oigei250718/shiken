@@ -15,13 +15,16 @@ func handleArticleList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	render(w, "article_list.html", map[string]any{
+	render(w, r, "article_list.html", map[string]any{
 		"Items": items, "Page": makePage(page, total, q),
 	})
 }
 
 func handleArticleNew(w http.ResponseWriter, r *http.Request) {
-	render(w, "article_form.html", map[string]any{
+	if !requireEditor(w, r) {
+		return
+	}
+	render(w, r, "article_form.html", map[string]any{
 		"Title": "录入文章", "Action": "/articles",
 		"Article": Article{},
 		"Saved":   r.URL.Query().Get("saved"),
@@ -30,6 +33,9 @@ func handleArticleNew(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleArticleCreate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	a := articleFromForm(r)
 	if a.Title == "" {
 		http.Error(w, "标题不能为空", http.StatusBadRequest)
@@ -51,25 +57,31 @@ func handleArticleDetail(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "文章不存在", http.StatusNotFound)
 		return
 	}
-	render(w, "article_detail.html", map[string]any{
+	render(w, r, "article_detail.html", map[string]any{
 		"Article": a,
 	})
 }
 
 func handleArticleEdit(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	a, err := getArticle(id)
 	if err != nil {
 		http.Error(w, "文章不存在", http.StatusNotFound)
 		return
 	}
-	render(w, "article_form.html", map[string]any{
+	render(w, r, "article_form.html", map[string]any{
 		"Title": "编辑文章", "Action": "/articles/" + strconv.FormatInt(id, 10),
 		"Article": a,
 	})
 }
 
 func handleArticleUpdate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	if _, err := getArticle(id); err != nil {
 		http.Error(w, "文章不存在", http.StatusNotFound)
@@ -89,6 +101,9 @@ func handleArticleUpdate(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleArticleDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	if err := deleteArticle(id); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

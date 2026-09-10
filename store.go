@@ -311,8 +311,8 @@ func randomGrammars(query string, limit int) ([]Grammar, error) {
 
 // ===================== 单词 =====================
 
-// listWords 按录入时间倒序分页 + 模糊搜索（单词/假名/含义）
-func listWords(q string, page, level int) ([]Word, int, error) {
+// listWords 按录入时间倒序分页 + 模糊搜索（单词/假名/含义）；isErr 按当前用户判断
+func listWords(q string, page, level int, userID int64) ([]Word, int, error) {
 	conds := []string{}
 	args := []any{}
 	if q != "" {
@@ -334,9 +334,9 @@ func listWords(q string, page, level int) ([]Word, int, error) {
 		return nil, 0, err
 	}
 	rows, err := db.Query(`SELECT w.id, w.word, w.kana, w.level, w.created_at, w.updated_at,
-		EXISTS(SELECT 1 FROM error_words ew WHERE ew.word_id = w.id)
+		EXISTS(SELECT 1 FROM error_words ew WHERE ew.word_id = w.id AND ew.user_id = ?)
 		FROM words w `+where+` ORDER BY w.created_at DESC, w.id DESC LIMIT ? OFFSET ?`,
-		append(args, pageSize, (page-1)*pageSize)...)
+		append(append([]any{userID}, args...), pageSize, (page-1)*pageSize)...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -391,12 +391,12 @@ func meaningExamples(meaningID int64) ([]string, error) {
 	return out, rows.Err()
 }
 
-func getWord(id int64) (*Word, error) {
+func getWord(id, userID int64) (*Word, error) {
 	var w Word
 	var isErr int
 	err := db.QueryRow(`SELECT w.id, w.word, w.kana, w.level, w.created_at, w.updated_at,
-		EXISTS(SELECT 1 FROM error_words ew WHERE ew.word_id = w.id)
-		FROM words w WHERE w.id=?`, id).
+		EXISTS(SELECT 1 FROM error_words ew WHERE ew.word_id = w.id AND ew.user_id = ?)
+		FROM words w WHERE w.id=?`, userID, id).
 		Scan(&w.ID, &w.Word, &w.Kana, &w.Level, &w.CreatedAt, &w.UpdatedAt, &isErr)
 	if err != nil {
 		return nil, err
@@ -588,14 +588,15 @@ func getWordsByIDs(ids []int64) ([]Word, error) {
 
 // ===================== 易错单词 =====================
 
-func listErrorWords(page int) ([]Word, int, error) {
+func listErrorWords(page int, userID int64) ([]Word, int, error) {
 	var total int
-	if err := db.QueryRow(`SELECT COUNT(*) FROM error_words`).Scan(&total); err != nil {
+	if err := db.QueryRow(`SELECT COUNT(*) FROM error_words WHERE user_id=?`, userID).Scan(&total); err != nil {
 		return nil, 0, err
 	}
 	rows, err := db.Query(`SELECT w.id, w.word, w.kana, w.level, w.created_at, w.updated_at
 		FROM error_words ew JOIN words w ON w.id = ew.word_id
-		ORDER BY ew.created_at DESC, w.id DESC LIMIT ? OFFSET ?`, pageSize, (page-1)*pageSize)
+		WHERE ew.user_id = ?
+		ORDER BY ew.created_at DESC, w.id DESC LIMIT ? OFFSET ?`, userID, pageSize, (page-1)*pageSize)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -613,24 +614,25 @@ func listErrorWords(page int) ([]Word, int, error) {
 	return out, total, rows.Err()
 }
 
-func addErrorWord(id int64) error {
-	_, err := db.Exec(`INSERT IGNORE INTO error_words (word_id, created_at) VALUES (?,?)`, id, now())
+func addErrorWord(userID, id int64) error {
+	_, err := db.Exec(`INSERT IGNORE INTO error_words (user_id, word_id, created_at) VALUES (?,?,?)`, userID, id, now())
 	return err
 }
 
-func deleteErrorWord(id int64) error {
-	_, err := db.Exec(`DELETE FROM error_words WHERE word_id=?`, id)
+// deleteErrorWord 仅删除属于该用户的易错词（不能误删他人/共享数据）
+func deleteErrorWord(userID, id int64) error {
+	_, err := db.Exec(`DELETE FROM error_words WHERE user_id=? AND word_id=?`, userID, id)
 	return err
 }
 
-// searchWordsNotInError 模糊搜索尚未加入易错库的单词（用于手动添加）
-func searchWordsNotInError(q string) ([]Word, error) {
+// searchWordsNotInError 模糊搜索尚未加入「当前用户」易错库的单词（用于手动添加）
+func searchWordsNotInError(q string, userID int64) ([]Word, error) {
 	like := "%" + q + "%"
 	rows, err := db.Query(`SELECT w.id, w.word, w.kana, w.level, w.created_at, w.updated_at FROM words w
-		WHERE NOT EXISTS (SELECT 1 FROM error_words ew WHERE ew.word_id = w.id)
+		WHERE NOT EXISTS (SELECT 1 FROM error_words ew WHERE ew.word_id = w.id AND ew.user_id = ?)
 		  AND (w.word LIKE ? OR w.kana LIKE ?
 		    OR EXISTS (SELECT 1 FROM word_meanings m WHERE m.word_id = w.id AND m.meaning LIKE ?))
-		ORDER BY w.created_at DESC, w.id DESC LIMIT 50`, like, like, like)
+		ORDER BY w.created_at DESC, w.id DESC LIMIT 50`, userID, like, like, like)
 	if err != nil {
 		return nil, err
 	}
@@ -705,5 +707,96 @@ func updateArticle(a *Article) error {
 
 func deleteArticle(id int64) error {
 	_, err := db.Exec(`DELETE FROM articles WHERE id=?`, id)
+	return err
+}
+
+// ==================== 用户 ====================
+
+// createUser 创建用户，密码以 bcrypt 哈希存储；默认启用
+func createUser(username, password, role string) (int64, error) {
+	hash, err := hashPassword(password)
+	if err != nil {
+		return 0, err
+	}
+	res, err := db.Exec(`INSERT INTO users (username, password, role, disabled, created_at, updated_at)
+		VALUES (?,?,?,0,?,?)`, username, hash, role, now(), now())
+	if err != nil {
+		return 0, err
+	}
+	return res.LastInsertId()
+}
+
+// getUser 按 ID 加载用户（用于鉴权时取最新状态）
+func getUser(id int64) (User, error) {
+	var u User
+	var disabled int
+	err := db.QueryRow(`SELECT id, username, password, role, disabled, created_at, updated_at
+		FROM users WHERE id=?`, id).
+		Scan(&u.ID, &u.Username, &u.Password, &u.Role, &disabled, &u.CreatedAt, &u.UpdatedAt)
+	u.Disabled = disabled != 0
+	return u, err
+}
+
+// getUserByUsername 按用户名加载用户（用于登录校验）
+func getUserByUsername(username string) (User, error) {
+	var u User
+	var disabled int
+	err := db.QueryRow(`SELECT id, username, password, role, disabled, created_at, updated_at
+		FROM users WHERE username=?`, username).
+		Scan(&u.ID, &u.Username, &u.Password, &u.Role, &disabled, &u.CreatedAt, &u.UpdatedAt)
+	u.Disabled = disabled != 0
+	return u, err
+}
+
+// listUsers 列出全部用户（用户管理页）
+func listUsers() ([]User, error) {
+	rows, err := db.Query(`SELECT id, username, role, disabled, created_at, updated_at
+		FROM users ORDER BY id`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var out []User
+	for rows.Next() {
+		var u User
+		var disabled int
+		if err := rows.Scan(&u.ID, &u.Username, &u.Role, &disabled, &u.CreatedAt, &u.UpdatedAt); err != nil {
+			return nil, err
+		}
+		u.Disabled = disabled != 0
+		out = append(out, u)
+	}
+	return out, rows.Err()
+}
+
+// updateUserRole 修改用户角色（root / admin / user）
+func updateUserRole(id int64, role string) error {
+	_, err := db.Exec(`UPDATE users SET role=?, updated_at=? WHERE id=?`, role, now(), id)
+	return err
+}
+
+// setUserDisabled 启用 / 禁用用户
+func setUserDisabled(id int64, disabled bool) error {
+	v := 0
+	if disabled {
+		v = 1
+	}
+	_, err := db.Exec(`UPDATE users SET disabled=?, updated_at=? WHERE id=?`, v, now(), id)
+	return err
+}
+
+// resetUserPassword 将用户密码重置为指定明文（bcrypt 哈希后存储）
+func resetUserPassword(id int64, plain string) error {
+	hash, err := hashPassword(plain)
+	if err != nil {
+		return err
+	}
+	_, err = db.Exec(`UPDATE users SET password=?, updated_at=? WHERE id=?`, hash, now(), id)
+	return err
+}
+
+// deleteUser 删除用户（其易错词由外键级联删除）
+func deleteUser(id int64) error {
+	_, err := db.Exec(`DELETE FROM users WHERE id=?`, id)
 	return err
 }

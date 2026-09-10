@@ -11,7 +11,7 @@ func handleWordList(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	level, _ := strconv.Atoi(r.URL.Query().Get("level"))
 	page := parsePage(r)
-	items, total, err := listWords(q, page, level)
+	items, total, err := listWords(q, page, level, currentUserID(r))
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -20,13 +20,16 @@ func handleWordList(w http.ResponseWriter, r *http.Request) {
 	if level >= 1 && level <= 5 {
 		extra = "&level=" + strconv.Itoa(level)
 	}
-	render(w, "word_list.html", map[string]any{
+	render(w, r, "word_list.html", map[string]any{
 		"Items": items, "Page": makePage(page, total, q, extra), "Level": level,
 	})
 }
 
 func handleWordNew(w http.ResponseWriter, r *http.Request) {
-	render(w, "word_form.html", map[string]any{
+	if !requireEditor(w, r) {
+		return
+	}
+	render(w, r, "word_form.html", map[string]any{
 		"Title": "录入单词", "Action": "/words",
 		"Word":    Word{Level: 3, Meanings: []Meaning{{}}},
 		"Saved":   r.URL.Query().Get("saved"),
@@ -58,6 +61,9 @@ func wordFromForm(r *http.Request) Word {
 }
 
 func handleWordCreate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	wd := wordFromForm(r)
 	if wd.Word == "" {
 		http.Error(w, "单词不能为空", http.StatusBadRequest)
@@ -77,21 +83,24 @@ func handleWordCreate(w http.ResponseWriter, r *http.Request) {
 
 func handleWordDetail(w http.ResponseWriter, r *http.Request) {
 	id := parseID(r, "id")
-	wd, err := getWord(id)
+	wd, err := getWord(id, currentUserID(r))
 	if err != nil {
 		http.Error(w, "单词不存在", http.StatusNotFound)
 		return
 	}
 	prev, next := wordPrevNext(id)
-	render(w, "word_detail.html", map[string]any{
+	render(w, r, "word_detail.html", map[string]any{
 		"Word": wd, "Prev": prev, "Next": next,
 		"Back": r.URL.Query().Get("back"),
 	})
 }
 
 func handleWordEdit(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
-	wd, err := getWord(id)
+	wd, err := getWord(id, currentUserID(r))
 	if err != nil {
 		http.Error(w, "单词不存在", http.StatusNotFound)
 		return
@@ -99,13 +108,16 @@ func handleWordEdit(w http.ResponseWriter, r *http.Request) {
 	if len(wd.Meanings) == 0 {
 		wd.Meanings = []Meaning{{}}
 	}
-	render(w, "word_form.html", map[string]any{
+	render(w, r, "word_form.html", map[string]any{
 		"Title": "编辑单词", "Action": "/words/" + strconv.FormatInt(id, 10),
 		"Word": wd,
 	})
 }
 
 func handleWordUpdate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	wd := wordFromForm(r)
 	wd.ID = id
@@ -132,7 +144,7 @@ func relatedIDsFromForm(r *http.Request) []int64 {
 
 // syncWordRelations 将单词的关联关系同步为目标集合（新增缺失的，删除多余的）
 func syncWordRelations(id int64, target []int64) {
-	cur, err := getWord(id)
+	cur, err := getWord(id, 0)
 	if err != nil {
 		return
 	}
@@ -157,6 +169,9 @@ func syncWordRelations(id int64, target []int64) {
 }
 
 func handleWordDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	if err := deleteWords([]int64{id}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -166,6 +181,9 @@ func handleWordDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWordBatchDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	_ = r.ParseForm()
 	var ids []int64
 	for _, s := range r.Form["ids"] {
@@ -179,8 +197,11 @@ func handleWordBatchDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWordRelatePage(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
-	wd, err := getWord(id)
+	wd, err := getWord(id, currentUserID(r))
 	if err != nil {
 		http.Error(w, "单词不存在", http.StatusNotFound)
 		return
@@ -188,7 +209,7 @@ func handleWordRelatePage(w http.ResponseWriter, r *http.Request) {
 	q := strings.TrimSpace(r.URL.Query().Get("q"))
 	var results []Word
 	if q != "" {
-		all, _, err := listWords(q, 1, 0)
+		all, _, err := listWords(q, 1, 0, currentUserID(r))
 		if err == nil {
 			related := map[int64]bool{id: true}
 			for _, ref := range wd.Related {
@@ -201,12 +222,15 @@ func handleWordRelatePage(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	render(w, "word_relate.html", map[string]any{
+	render(w, r, "word_relate.html", map[string]any{
 		"Word": wd, "Query": q, "Results": results,
 	})
 }
 
 func handleWordRelateAdd(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	rid, _ := strconv.ParseInt(r.FormValue("rid"), 10, 64)
 	if err := addWordRelation(id, rid); err != nil {
@@ -221,6 +245,9 @@ func handleWordRelateAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleWordRelateDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	rid := parseID(r, "rid")
 	if err := deleteWordRelation(id, rid); err != nil {

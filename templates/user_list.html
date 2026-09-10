@@ -1,0 +1,54 @@
+{{template "header" .}}
+<div class="page-head">
+  <h1>用户管理</h1>
+  <a class="btn btn-primary" href="/users/new">+ 新增用户</a>
+</div>
+<table class="table">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>用户名</th>
+      <th>角色</th>
+      <th>状态</th>
+      <th>创建时间</th>
+      <th>更新时间</th>
+      <th>操作</th>
+    </tr>
+  </thead>
+  <tbody>
+    {{range .Users}}
+    <tr>
+      <td>{{.ID}}</td>
+      <td>{{.Username}}</td>
+      <td>{{roleLabel .Role}}</td>
+      <td>{{if .Disabled}}<span class="tag tag-error">已禁用</span>{{else}}启用{{end}}</td>
+      <td class="cell-time">{{.CreatedAt}}</td>
+      <td class="cell-time">{{.UpdatedAt}}</td>
+      <td class="cell-actions">
+        {{if .IsRoot}}
+          <span class="muted">根用户（不可操作）</span>
+        {{else}}
+          <form method="post" action="/users/{{.ID}}/role" class="inline-form">
+            <select name="role" onchange="this.form.submit()">
+              <option value="admin"{{if eq .Role "admin"}} selected{{end}}>管理员</option>
+              <option value="user"{{if eq .Role "user"}} selected{{end}}>普通用户</option>
+            </select>
+          </form>
+          <form method="post" action="/users/{{.ID}}/toggle" class="inline-form">
+            <button class="btn btn-small" type="submit" name="disabled" value="{{if .Disabled}}0{{else}}1{{end}}">{{if .Disabled}}启用{{else}}禁用{{end}}</button>
+          </form>
+          <form method="post" action="/users/{{.ID}}/reset" class="inline-form">
+            <button class="btn btn-small" type="submit" onclick="return confirm('将该用户密码重置为默认密码 ppy0910. ？')">重置密码</button>
+          </form>
+          <form method="post" action="/users/{{.ID}}/delete" class="inline-form">
+            <button class="btn btn-small btn-danger" type="submit" onclick="return confirm('确定删除该用户吗？其易错词也会一并删除。')">删除</button>
+          </form>
+        {{end}}
+      </td>
+    </tr>
+    {{else}}
+    <tr><td colspan="7" class="empty">暂无其他用户</td></tr>
+    {{end}}
+  </tbody>
+</table>
+{{template "footer" .}}

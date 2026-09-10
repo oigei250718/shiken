@@ -75,6 +75,26 @@ func (a *Article) Excerpt() string {
 	return string(runes)
 }
 
+// User 系统用户
+type User struct {
+	ID        int64
+	Username  string
+	Password  string // bcrypt 哈希
+	Role      string // 'root' | 'admin' | 'user'
+	Disabled  bool
+	CreatedAt string
+	UpdatedAt string
+}
+
+// IsRoot 是否为根用户
+func (u *User) IsRoot() bool { return u != nil && u.Role == "root" }
+
+// IsAdmin 是否为管理员或根用户
+func (u *User) IsAdmin() bool { return u != nil && (u.Role == "root" || u.Role == "admin") }
+
+// CanEdit 是否能录入/编辑/删除单词·语法·文章（root 与 admin）
+func (u *User) CanEdit() bool { return u != nil && (u.Role == "root" || u.Role == "admin") }
+
 // Page 分页信息
 type Page struct {
 	Current   int

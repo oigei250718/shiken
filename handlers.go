@@ -7,8 +7,14 @@ import (
 	"strconv"
 )
 
-func render(w http.ResponseWriter, name string, data any) {
+func render(w http.ResponseWriter, r *http.Request, name string, data any) {
 	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	// 注入当前登录用户，供模板按角色显隐菜单/按钮
+	if m, ok := data.(map[string]any); ok {
+		if u := userFromContext(r); u != nil {
+			m["User"] = u
+		}
+	}
 	if err := tmpl.ExecuteTemplate(w, name, data); err != nil {
 		log.Printf("渲染模板 %s 失败: %v", name, err)
 		http.Error(w, "页面渲染失败", http.StatusInternalServerError)
@@ -77,11 +83,12 @@ func splitComma(s string) []string {
 
 func handleHome(w http.ResponseWriter, r *http.Request) {
 	var wordCount, grammarCount, errorCount, articleCount int
+	uid := currentUserID(r)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM words`).Scan(&wordCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM grammars`).Scan(&grammarCount)
-	_ = db.QueryRow(`SELECT COUNT(*) FROM error_words`).Scan(&errorCount)
+	_ = db.QueryRow(`SELECT COUNT(*) FROM error_words WHERE user_id=?`, uid).Scan(&errorCount)
 	_ = db.QueryRow(`SELECT COUNT(*) FROM articles`).Scan(&articleCount)
-	render(w, "home.html", map[string]any{
+	render(w, r, "home.html", map[string]any{
 		"WordCount": wordCount, "GrammarCount": grammarCount, "ErrorCount": errorCount,
 		"ArticleCount": articleCount,
 	})

@@ -1,46 +1,48 @@
 {{template "header" .}}
-<div class="page-head" data-page-node-id="ZBGk4pWbatOInJlGxM1aFj">
-  <h1 data-page-node-id="G9kW8puRuvEPQaxmIJs1LH">文章列表</h1>
-  <a class="btn btn-primary" href="/articles/new" data-page-node-id="ljg9AkMHvAEeWwHJQH7OP6">+ 录入文章</a>
+<div class="page-head">
+  <h1>文章列表</h1>
+  {{if .User.CanEdit}}<a class="btn btn-primary" href="/articles/new">+ 录入文章</a>{{end}}
 </div>
-<form class="search-bar" method="get" action="/articles" data-page-node-id="PUMmLx1zzghmxCKAp3QobC">
-  <input type="text" name="q" value="{{.Page.Query}}" placeholder="搜索标题 / 内容..." data-page-node-id="EUeMTjjghnQsBxiFC4JOD2">
-  <button class="btn" type="submit" data-page-node-id="nGWqhlMtFrOMTAitrZGcr1">搜索</button>
-  {{if .Page.Query}}<a class="btn btn-plain" href="/articles" data-page-node-id="fG7QRz9deyBuHxeLbH3Ban">清除</a>{{end}}
+<form class="search-bar" method="get" action="/articles">
+  <input type="text" name="q" value="{{.Page.Query}}" placeholder="搜索标题 / 内容...">
+  <button class="btn" type="submit">搜索</button>
+  {{if .Page.Query}}<a class="btn btn-plain" href="/articles">清除</a>{{end}}
 </form>
-<table class="table" data-page-node-id="50eOYgxbCQ8i7N3y7cbIQB">
-  <thead data-page-node-id="vmALA9aKZuQ4JCjziTxxKc">
-    <tr data-page-node-id="Fmf0StVeC6HiAcmR5frtIw">
-      <th data-page-node-id="IHQHDMxI1wug7h8hj3P1e3">标题</th>
-      <th data-page-node-id="wtwAc6AYClhVNtfVEZ3ktz">创建时间</th>
-      <th data-page-node-id="PqhG4O55zN4fSHCRubRwhK">更新时间</th>
-      <th data-page-node-id="mkXZmIIwOyKRpXxUf7DuGf">操作</th>
+<table class="table">
+  <thead>
+    <tr>
+      <th>标题</th>
+      <th>创建时间</th>
+      <th>更新时间</th>
+      <th>操作</th>
     </tr>
   </thead>
-  <tbody data-page-node-id="a2RY8PMX0LKxooq9FJ9uiZ">
+  <tbody>
     {{range .Items}}
-    <tr data-page-node-id="zNFwPaOi4a6T8Lc1HRcenG">
-      <td data-page-node-id="sQHWpYhlrr4UjIYER8j0CJ"><a href="/articles/{{.ID}}" class="item-title jp" data-page-node-id="qjQPOU10mitDVPwHgMD6bw">{{.Title}}</a></td>
-      <td class="cell-time" data-page-node-id="tYYNzXDbhCbmxq005c6cmh">{{minute .CreatedAt}}</td>
-      <td class="cell-time" data-page-node-id="V5Ew3ftwLUf8jmM2RdsMi6">{{minute .UpdatedAt}}</td>
-      <td class="cell-actions" data-page-node-id="Yj1WMRj6BnKB7D9v2AFP4n">
-        <a class="btn btn-small" href="/articles/{{.ID}}/edit" data-page-node-id="JmWflEUmT9Noi2Fjvbk2Vd">编辑</a>
+    <tr>
+      <td><a href="/articles/{{.ID}}" class="item-title jp">{{.Title}}</a></td>
+      <td class="cell-time">{{minute .CreatedAt}}</td>
+      <td class="cell-time">{{minute .UpdatedAt}}</td>
+      <td class="cell-actions">
+        {{if $.User.CanEdit}}
+        <a class="btn btn-small" href="/articles/{{.ID}}/edit">编辑</a>
         <button class="btn btn-small btn-danger" type="submit" form="del-a-{{.ID}}"
-          onclick="return confirm('确定删除这篇文章吗？')" data-page-node-id="heQ1xUdMPxP5TF7w8GXP54">删除</button>
+          onclick="return confirm('确定删除这篇文章吗？')">删除</button>
+        {{end}}
       </td>
     </tr>
     {{else}}
-    <tr data-page-node-id="3AWVi4Xhf1F9t3VyWzwDsb"><td colspan="4" class="empty" data-page-node-id="oMS9657pJcFF0pz50uGqOm">暂无文章，<a href="/articles/new" data-page-node-id="zJSEHuxaDFButqenKObkvK">去录入</a></td></tr>
+    <tr><td colspan="4" class="empty">{{if .User.CanEdit}}暂无文章，<a href="/articles/new">去录入</a>{{else}}暂无文章{{end}}</td></tr>
     {{end}}
   </tbody>
 </table>
 {{if .Items}}
-<div class="list-footer" data-page-node-id="m6lh78q9d4EPSD4XIxLeik">
-  <span class="muted" data-page-node-id="8E2IBCAV4fMUuXpWnM8NeC">共 {{.Page.Count}} 条</span>
-</div>
+<div class="list-footer"><span class="muted">共 {{.Page.Count}} 条</span></div>
 {{end}}
+{{if .User.CanEdit}}
 {{range .Items}}
-<form id="del-a-{{.ID}}" method="post" action="/articles/{{.ID}}/delete" data-page-node-id="MmoguNBQmmcZhlCzNoDbXT"></form>
+<form id="del-a-{{.ID}}" method="post" action="/articles/{{.ID}}/delete"></form>
+{{end}}
 {{end}}
 {{template "pagination" .Page}}
 {{template "footer" .}}

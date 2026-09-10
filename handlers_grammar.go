@@ -15,13 +15,16 @@ func handleGrammarList(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	render(w, "grammar_list.html", map[string]any{
+	render(w, r, "grammar_list.html", map[string]any{
 		"Items": items, "Page": makePage(page, total, q),
 	})
 }
 
 func handleGrammarNew(w http.ResponseWriter, r *http.Request) {
-	render(w, "grammar_form.html", map[string]any{
+	if !requireEditor(w, r) {
+		return
+	}
+	render(w, r, "grammar_form.html", map[string]any{
 		"Title": "录入语法", "Action": "/grammars",
 		"Grammar": Grammar{Level: 3, Meanings: []Meaning{{}}},
 		"Saved":   r.URL.Query().Get("saved"),
@@ -52,6 +55,9 @@ func grammarFromForm(r *http.Request) Grammar {
 }
 
 func handleGrammarCreate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	g := grammarFromForm(r)
 	if g.Format == "" {
 		http.Error(w, "语法格式不能为空", http.StatusBadRequest)
@@ -77,13 +83,16 @@ func handleGrammarDetail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	prev, next := grammarPrevNext(id)
-	render(w, "grammar_detail.html", map[string]any{
+	render(w, r, "grammar_detail.html", map[string]any{
 		"Grammar": g, "Prev": prev, "Next": next,
 		"Back": r.URL.Query().Get("back"),
 	})
 }
 
 func handleGrammarEdit(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	g, err := getGrammar(id)
 	if err != nil {
@@ -93,13 +102,16 @@ func handleGrammarEdit(w http.ResponseWriter, r *http.Request) {
 	if len(g.Meanings) == 0 {
 		g.Meanings = []Meaning{{}}
 	}
-	render(w, "grammar_form.html", map[string]any{
+	render(w, r, "grammar_form.html", map[string]any{
 		"Title": "编辑语法", "Action": "/grammars/" + strconv.FormatInt(id, 10),
 		"Grammar": g,
 	})
 }
 
 func handleGrammarUpdate(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	g := grammarFromForm(r)
 	g.ID = id
@@ -151,6 +163,9 @@ func syncGrammarRelations(id int64, target []int64) {
 }
 
 func handleGrammarDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	if err := deleteGrammars([]int64{id}); err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -160,6 +175,9 @@ func handleGrammarDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGrammarBatchDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	_ = r.ParseForm()
 	var ids []int64
 	for _, s := range r.Form["ids"] {
@@ -173,6 +191,9 @@ func handleGrammarBatchDelete(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGrammarRelatePage(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	g, err := getGrammar(id)
 	if err != nil {
@@ -196,12 +217,15 @@ func handleGrammarRelatePage(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 	}
-	render(w, "grammar_relate.html", map[string]any{
+	render(w, r, "grammar_relate.html", map[string]any{
 		"Grammar": g, "Query": q, "Results": results,
 	})
 }
 
 func handleGrammarRelateAdd(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	rid, _ := strconv.ParseInt(r.FormValue("rid"), 10, 64)
 	if err := addGrammarRelation(id, rid); err != nil {
@@ -216,6 +240,9 @@ func handleGrammarRelateAdd(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleGrammarRelateDelete(w http.ResponseWriter, r *http.Request) {
+	if !requireEditor(w, r) {
+		return
+	}
 	id := parseID(r, "id")
 	rid := parseID(r, "rid")
 	if err := deleteGrammarRelation(id, rid); err != nil {
@@ -253,7 +280,7 @@ func handleGrammarReview(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	back := "/grammars/review?ids=" + idsParam
-	render(w, "grammar_review.html", map[string]any{
+	render(w, r, "grammar_review.html", map[string]any{
 		"Items": items, "Back": url.QueryEscape(back),
 	})
 }
