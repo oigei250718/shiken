@@ -163,3 +163,58 @@ func handleUserReset(w http.ResponseWriter, r *http.Request) {
 	}
 	http.Redirect(w, r, "/users?saved=pwd", http.StatusSeeOther)
 }
+
+// handleSelfPasswordGet 修改自己的密码：展示表单
+func handleSelfPasswordGet(w http.ResponseWriter, r *http.Request) {
+	data := map[string]any{"Title": "修改密码"}
+	if r.URL.Query().Get("saved") == "1" {
+		data["Saved"] = true
+	}
+	render(w, r, "password_form.html", data)
+}
+
+// handleSelfPasswordPost 修改自己的密码：校验原密码后更新为当前用户
+func handleSelfPasswordPost(w http.ResponseWriter, r *http.Request) {
+	_ = r.ParseForm()
+	oldP := r.FormValue("old_password")
+	newP := r.FormValue("new_password")
+	confirm := r.FormValue("confirm_password")
+
+	uid := currentUserID(r)
+	u, err := getUser(uid)
+	if err != nil {
+		http.Error(w, "用户不存在", http.StatusNotFound)
+		return
+	}
+
+	data := map[string]any{"Title": "修改密码"}
+
+	// 校验原密码
+	if !checkPassword(oldP, u.Password) {
+		data["Error"] = "原密码不正确"
+		render(w, r, "password_form.html", data)
+		return
+	}
+	// 校验新密码
+	if len(newP) < 6 {
+		data["Error"] = "新密码至少 6 位"
+		render(w, r, "password_form.html", data)
+		return
+	}
+	if newP != confirm {
+		data["Error"] = "两次输入的新密码不一致"
+		render(w, r, "password_form.html", data)
+		return
+	}
+	if err := resetUserPassword(u.ID, newP); err != nil {
+		data["Error"] = "修改失败：" + err.Error()
+		render(w, r, "password_form.html", data)
+		return
+	}
+	// 重新签发 token，保持登录状态并刷新 14 天有效期
+	u.Password = newP
+	if token, terr := generateToken(u); terr == nil {
+		setAuthCookie(w, token)
+	}
+	http.Redirect(w, r, "/password?saved=1", http.StatusSeeOther)
+}

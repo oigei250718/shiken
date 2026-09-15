@@ -48,9 +48,12 @@ h3 { font-size: 15px; color: #556; margin-bottom: 6px; }
   background: #fff;
   color: #2b2f36;
   font-size: 14px;
+  font-family: inherit;
   cursor: pointer;
   text-decoration: none;
   line-height: 1.4;
+  -webkit-appearance: none;
+  appearance: none;
 }
 .btn:hover { background: #eef1f6; }
 .btn-primary { background: #3a6fd8; border-color: #3a6fd8; color: #fff; }
@@ -315,12 +318,18 @@ h3 { font-size: 15px; color: #556; margin-bottom: 6px; }
 /* ---- 通用提示 ---- */
 .alert { padding: 10px 14px; border-radius: 8px; font-size: 14px; margin-bottom: 8px; }
 .alert-error { background: #fdecea; color: #b23b34; border: 1px solid #f5c6c0; }
+.alert-ok { background: #e8f6ec; color: #2f7d4d; border: 1px solid #b6e2c4; }
 
 /* ---- 顶部导航用户区 ---- */
 .nav-user { display: inline-flex; align-items: center; gap: 10px; margin-left: auto; font-size: 14px; color: #445; }
 .nav-user .username { font-weight: 600; color: #2b3a55; }
 .nav-user .role { color: #7a86a0; }
-.nav-logout { padding: 6px 12px; font-size: 13px; }
+/* 导航栏右侧的登出表单容器：仅做内联包裹，不额外撑开（与修改密码按钮等大） */
+.nav-logout { display: inline-flex; align-items: center; margin: 0; padding: 0; }
+/* 导航栏内的按钮型链接（修改密码）须覆盖 .nav a 的导航链接样式，否则会被渲染成高高的导航链接；与登出按钮保持完全一致 */
+.nav a.btn { color: #2b2f36; padding: 3px 10px; font-size: 13px; }
+.nav a.btn:hover { background: #eef1f6; color: #2b2f36; }
+.nav-pwd { margin-left: 6px; }
 
 /* ---- 用户管理内联表单 ---- */
 .inline-form { display: inline-flex; align-items: center; gap: 6px; margin: 0; }

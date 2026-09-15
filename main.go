@@ -101,6 +101,10 @@ func main() {
 	// 首页
 	mux.HandleFunc("GET /{$}", requireAuth(handleHome))
 
+	// 修改自己的密码（所有登录用户）
+	mux.HandleFunc("GET /password", requireAuth(handleSelfPasswordGet))
+	mux.HandleFunc("POST /password", requireAuth(handleSelfPasswordPost))
+
 	// 语法
 	mux.HandleFunc("GET /grammars", requireAuth(handleGrammarList))
 	mux.HandleFunc("GET /grammars/new", requireAuth(handleGrammarNew))

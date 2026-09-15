@@ -3,7 +3,8 @@ IMAGE   := shiken
 TAG     := latest
 PORT    := 8080
 # 部署时注入容器的 MySQL 连接串，可用 make deploy DSN=... 覆盖
-DSN     ?= root:123456@tcp(100.108.142.7:3306)/shiken?charset=utf8mb4&multiStatements=true
+# 默认指向本机 Docker MySQL 容器 mysql8（同一 shiken-net 网络内用容器名 mysql8 解析）
+DSN     ?= root:123456@tcp(mysql8:3306)/shiken?charset=utf8mb4&collation=utf8mb4_unicode_ci&multiStatements=true
 
 .PHONY: build clean docker deploy undeploy
 
@@ -43,7 +44,8 @@ deploy:
 		echo "无旧镜像，跳过"; \
 	fi; \
 	echo "==> [4/4] 启动容器"; \
-	docker run -d --name shiken -p $(PORT):$(PORT) -e SHIKEN_MYSQL_DSN='$(DSN)' $(IMAGE):$$tag; \
+	docker network create shiken-net 2>/dev/null || true; \
+	docker run -d --restart unless-stopped --network shiken-net --name shiken -p $(PORT):$(PORT) -e SHIKEN_MYSQL_DSN='$(DSN)' $(IMAGE):$$tag; \
 	echo "部署完成: $(IMAGE):$$tag -> http://localhost:$(PORT)"
 
 # 停止并移除 shiken 容器（保留镜像和数据）
