@@ -533,15 +533,19 @@ func wordPrevNext(id int64) (prev, next int64) {
 }
 
 // randomWordsForTest 从指定级别中随机抽 n 个单词
-func randomWordsForTest(levels []int, n int) ([]Word, error) {
+func randomWordsForTest(levels []int, userID int64, n int) ([]Word, error) {
 	marks := strings.TrimSuffix(strings.Repeat("?,", len(levels)), ",")
-	args := make([]any, 0, len(levels)+1)
+	// 占位符顺序：SELECT 子句的 EXISTS(user_id=?) 在前，WHERE 的 IN(level) 居中，LIMIT 最后
+	args := make([]any, 0, len(levels)+2)
+	args = append(args, userID)
 	for _, l := range levels {
 		args = append(args, l)
 	}
 	args = append(args, n)
-	rows, err := db.Query(`SELECT id, word, kana, level, created_at, updated_at, 0 FROM words
-		WHERE level IN (`+marks+`) ORDER BY RAND() LIMIT ?`, args...)
+	rows, err := db.Query(`SELECT w.id, w.word, w.kana, w.level, w.created_at, w.updated_at,
+		EXISTS(SELECT 1 FROM error_words ew WHERE ew.word_id = w.id AND ew.user_id = ?)
+		FROM words w
+		WHERE w.level IN (`+marks+`) ORDER BY RAND() LIMIT ?`, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -553,6 +557,7 @@ func randomWordsForTest(levels []int, n int) ([]Word, error) {
 		if err := rows.Scan(&w.ID, &w.Word, &w.Kana, &w.Level, &w.CreatedAt, &w.UpdatedAt, &isErr); err != nil {
 			return nil, err
 		}
+		w.IsError = isErr == 1
 		w.Meanings, _ = wordMeanings(w.ID)
 		out = append(out, w)
 	}

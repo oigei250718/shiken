@@ -260,6 +260,7 @@ function initTest() {
     var w = words[idx];
     var el = document.getElementById('test-answer');
     var parts = [];
+    if (w.isError) parts.push('<div class="test-error-flag"><span class="tag tag-error">易错单词</span></div>');
     if (mode !== 'word') parts.push('<div><strong>' + esc(w.word) + '</strong></div>');
     if (mode !== 'kana' && w.kana) parts.push('<div>假名：' + esc(w.kana) + '</div>');
     if (mode !== 'meaning') {

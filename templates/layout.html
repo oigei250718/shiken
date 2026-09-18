@@ -1,27 +1,45 @@
 {{define "header"}}
 <!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<html lang="zh-CN" data-page-node-id="jlxvyY7l8ELWk9lGcHCYi2">
+<head data-page-node-id="T0zsC0x6zSDyhmXZ3pVDNi">
+<meta charset="UTF-8" data-page-node-id="0RmJiiHJkGdbfTnGsT2xiA">
+<meta name="viewport" content="width=device-width, initial-scale=1.0" data-page-node-id="Qp0PREpR7noXCrkY6yUbsG">
 <title>{{if .Title}}{{.Title}} - {{end}}日语学习系统</title>
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css" data-page-node-id="RMSfNI8eFqhGyz7k8lu75u">
 </head>
-<body>
-<nav class="nav">
-  <a class="nav-brand" href="/">日语学习</a>
-  <a href="/words">单词</a>
-  <a href="/grammars">语法</a>
-  <a href="/articles">文章</a>
-  <a href="/grammars/review">语法复习</a>
-  <a href="/test">单词测试</a>
-  <a href="/error-words">易错单词</a>
-  {{if .User.IsRoot}}<a href="/users">用户管理</a>{{end}}
-  <span class="nav-user">{{if .User}}{{.User.Username}}（{{roleLabel .User.Role}}）{{end}}</span>
-  {{if .User}}<a class="btn btn-small nav-pwd" href="/password">修改密码</a>{{end}}
-  {{if .User}}<form class="nav-logout" method="post" action="/logout"><button class="btn btn-small" type="submit">登出</button></form>{{end}}
+<body data-page-node-id="ALEWDAjBiqjwNXmG2pR2oP">
+<nav class="nav" data-page-node-id="FucBxA7Ug5AWs90LBRm6eM">
+  <a class="nav-brand" href="/" data-page-node-id="SeM75DINtDCiChK7DHW87J">日语学习</a>
+  <div class="nav-dropdown" data-page-node-id="xPjycOIaYUTSVG8QqsiTWp">
+    <a class="nav-dropdown-toggle" href="/words" data-page-node-id="OlIlFcrk9FZz1CH8MD6IVn">单词 <span class="caret" data-page-node-id="tf82f6vPwCjL7GaFP3CXeE">▾</span></a>
+    <div class="nav-menu" data-page-node-id="kxoBEKTw0uPUhAt33aFXIH">
+      <a href="/words/new" data-page-node-id="43xB8ZVxplwAj9mtRWijrh">单词录入</a>
+      <a href="/words" data-page-node-id="7d6VLSwGe1OeH6kdIhsXPW">单词列表</a>
+      <a href="/test" data-page-node-id="uB78BGyvJoWcxnmFwRDZh4">单词测试</a>
+      <a href="/error-words" data-page-node-id="W0WJYyCbErFLUfvuCUEsVk">易错单词</a>
+    </div>
+  </div>
+  <div class="nav-dropdown" data-page-node-id="wqJM1VAjxp2u3W9tqN6kDH">
+    <a class="nav-dropdown-toggle" href="/grammars" data-page-node-id="YieWlKMCGBEDzsmtdqlvU1">语法 <span class="caret" data-page-node-id="GRTNiJHQgNrJuP36kVdJ9t">▾</span></a>
+    <div class="nav-menu" data-page-node-id="hofRo0tDWHkfzdVW3L8EsH">
+      <a href="/grammars/new" data-page-node-id="o8qRvWxbyB6yMx6B7G2vkX">语法录入</a>
+      <a href="/grammars" data-page-node-id="xhlwALFXtdROE3YJYYroAB">语法列表</a>
+      <a href="/grammars/review" data-page-node-id="ApzfwFztzlHbgrWzdUKa1g">语法复习</a>
+    </div>
+  </div>
+  <div class="nav-dropdown" data-page-node-id="sJhHrDZgdx4OYAJWPYp39x">
+    <a class="nav-dropdown-toggle" href="/articles" data-page-node-id="XEAzZT9bEihkapsciI1orU">文章 <span class="caret" data-page-node-id="x26WfLAoUbB2HCjuQn0ekL">▾</span></a>
+    <div class="nav-menu" data-page-node-id="fCBiYpPRXKLPYkvF52bALL">
+      <a href="/articles/new" data-page-node-id="x9LC2nCQwcpC4k16qZhoTt">文章录入</a>
+      <a href="/articles" data-page-node-id="L17lLRbi44g7BfX8ulct7j">文章列表</a>
+    </div>
+  </div>
+  {{if .User.IsRoot}}<a href="/users" data-page-node-id="kHv68FWzBtmGByU7VqJgiU">用户管理</a>{{end}}
+  <span class="nav-user" data-page-node-id="iADddODP2e8Jo4HyqUFZG5">{{if .User}}{{.User.Username}}（{{roleLabel .User.Role}}）{{end}}</span>
+  {{if .User}}<a class="btn btn-small nav-pwd" href="/password" data-page-node-id="i3f7HO73Uo4K8M21RPoa8E">修改密码</a>{{end}}
+  {{if .User}}<form class="nav-logout" method="post" action="/logout" data-page-node-id="DybAKcZuulnauDsG1tsagw"><button class="btn btn-small" type="submit" data-page-node-id="Hpdkqs8pIqpmvv04S7EfSf">登出</button></form>{{end}}
 </nav>
-<main class="container">
+<main class="container" data-page-node-id="HSHWM7k26jlvnUHU0Nyixd">
 {{end}}
 
 {{define "footer"}}
@@ -33,10 +51,10 @@
 
 {{define "pagination"}}
 {{if gt .Total 1}}
-<div class="pagination">
-  {{if .HasPrev}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{sub .Current 1}}">上一页</a>{{end}}
-  <span>第 {{.Current}} / {{.Total}} 页</span>
-  {{if .HasNext}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{add .Current 1}}">下一页</a>{{end}}
+<div class="pagination" data-page-node-id="Tr2o15XbCR6gFMKMS270Gv">
+  {{if .HasPrev}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{sub .Current 1}}" data-page-node-id="xth3NHdwLxmmr0eJEPyEy5">上一页</a>{{end}}
+  <span data-page-node-id="FcDKhfpB6ww4h00R930tS9">第 {{.Current}} / {{.Total}} 页</span>
+  {{if .HasNext}}<a class="btn" href="?q={{.Query}}{{.Extra}}&page={{add .Current 1}}" data-page-node-id="dxch9RXRh6vLnlErHCsOno">下一页</a>{{end}}
 </div>
 {{end}}
 {{end}}

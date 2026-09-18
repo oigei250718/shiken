@@ -30,9 +30,9 @@ func renderMarkdown(s string) template.HTML {
 }
 
 var funcMap = template.FuncMap{
-	"add": func(a, b int) int { return a + b },
-	"sub": func(a, b int) int { return a - b },
-	"mul": func(a, b int) int { return a * b },
+	"add":      func(a, b int) int { return a + b },
+	"sub":      func(a, b int) int { return a - b },
+	"mul":      func(a, b int) int { return a * b },
 	"markdown": renderMarkdown,
 	"minute": func(s string) string { // 时间精确到分钟
 		if len(s) > 16 {

@@ -31,10 +31,11 @@ type testMeaningJSON struct {
 }
 
 type testWordJSON struct {
-	ID       int64            `json:"id"`
-	Word     string           `json:"word"`
-	Kana     string           `json:"kana"`
+	ID       int64             `json:"id"`
+	Word     string            `json:"word"`
+	Kana     string            `json:"kana"`
 	Meanings []testMeaningJSON `json:"meanings"`
+	IsError  bool              `json:"isError"`
 }
 
 func handleTestRun(w http.ResponseWriter, r *http.Request) {
@@ -54,7 +55,12 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 	if mode != "word" && mode != "kana" && mode != "meaning" {
 		mode = "word"
 	}
-	words, err := randomWordsForTest(levels, 20)
+	// 测试单词个数：20 / 50 / 100，默认 20
+	count := 20
+	if c, err := strconv.Atoi(q.Get("count")); err == nil && (c == 20 || c == 50 || c == 100) {
+		count = c
+	}
+	words, err := randomWordsForTest(levels, currentUserID(r), count)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -74,12 +80,12 @@ func handleTestRun(w http.ResponseWriter, r *http.Request) {
 			ms = append(ms, testMeaningJSON{Text: m.Text, Examples: ex})
 		}
 		payload = append(payload, testWordJSON{
-			ID: wd.ID, Word: wd.Word, Kana: wd.Kana, Meanings: ms,
+			ID: wd.ID, Word: wd.Word, Kana: wd.Kana, Meanings: ms, IsError: wd.IsError,
 		})
 	}
 	data, _ := json.Marshal(payload)
 	render(w, r, "test_run.html", map[string]any{
-		"WordsJSON": string(data), "Mode": mode, "Total": len(payload),
+		"WordsJSON": string(data), "Mode": mode, "Total": len(payload), "Count": count,
 	})
 }
 

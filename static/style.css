@@ -26,6 +26,33 @@ body {
 .nav a:hover { background: #3d4657; color: #fff; }
 .nav-brand { font-weight: 700; color: #fff !important; margin-right: 16px; }
 
+/* 二级下拉菜单 */
+.nav-dropdown { position: relative; }
+.nav-dropdown-toggle .caret { font-size: 11px; opacity: .8; }
+.nav-menu {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  min-width: 140px;
+  background: #2f3644;
+  border: 1px solid #3d4657;
+  border-radius: 0 0 8px 8px;
+  box-shadow: 0 8px 20px rgba(0,0,0,.25);
+  z-index: 20;
+  overflow: hidden;
+}
+.nav-dropdown:hover .nav-menu { display: block; }
+.nav-menu a {
+  display: block;
+  padding: 10px 18px;
+  white-space: nowrap;
+  color: #cfd6e4 !important;
+  border-top: 1px solid #3a4250;
+}
+.nav-menu a:first-child { border-top: none; }
+.nav-menu a:hover { background: #3d4657; color: #fff !important; }
+
 .container { max-width: 960px; margin: 0 auto; padding: 24px 20px 60px; }
 
 h1 { font-size: 22px; margin-bottom: 16px; }
@@ -228,6 +255,7 @@ h3 { font-size: 15px; color: #556; margin-bottom: 6px; }
 .test-mode-hint { color: #8a919e; font-size: 13px; margin-bottom: 12px; }
 .test-prompt { font-size: 34px; font-weight: 700; margin-bottom: 16px; }
 .test-answer { color: #4a5160; font-size: 17px; line-height: 2; }
+.test-error-flag { margin-bottom: 10px; }
 .test-example { color: #6b7280; font-size: 15px; }
 .test-actions { justify-content: center; }
 

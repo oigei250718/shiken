@@ -20,8 +20,16 @@
       <label class="checkbox-label"><input type="radio" name="mode" value="meaning"> 根据单词含义</label>
     </div>
   </div>
+  <div class="form-row">
+    <label>测试单词个数</label>
+    <div class="level-checks">
+      <label class="checkbox-label"><input type="radio" name="count" value="20" checked> 20 个</label>
+      <label class="checkbox-label"><input type="radio" name="count" value="50"> 50 个</label>
+      <label class="checkbox-label"><input type="radio" name="count" value="100"> 100 个</label>
+    </div>
+  </div>
   <div class="form-actions">
-    <button class="btn btn-primary" type="submit">开始测试（随机 20 个）</button>
+    <button class="btn btn-primary" type="submit">开始测试</button>
   </div>
 </form>
 {{template "footer" .}}

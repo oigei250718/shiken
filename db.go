@@ -11,7 +11,7 @@ import (
 var db *sql.DB
 
 // mysqlDSN 默认连接串，可用环境变量 SHIKEN_MYSQL_DSN 覆盖
-const mysqlDSN = "root:123456@tcp(100.108.142.7:3306)/shiken?charset=utf8mb4&collation=utf8mb4_unicode_ci&multiStatements=true"
+const mysqlDSN = "root:123456@tcp(127.0.0.1:33306)/shiken?charset=utf8mb4&collation=utf8mb4_unicode_ci&multiStatements=true"
 
 func openDB(dsn string) error {
 	var err error
