@@ -268,11 +268,8 @@ function removeRelatedChip(btn) {
       .then(function (res) { return res.json(); })
       .then(function (list) {
         active = -1;
-        if (!list || !list.length) {
-          box.innerHTML = '<div class="ac-empty">词库中暂无匹配，可直接录入</div>';
-          box.style.display = 'block';
-          return;
-        }
+        // 无匹配：不展示下拉，保持输入框安静，用户直接继续录入
+        if (!list || !list.length) { hide(); return; }
         var html = '';
         list.slice(0, 8).forEach(function (item) {
           var label = item.word || '';

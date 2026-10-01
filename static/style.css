@@ -180,7 +180,6 @@ h3 { font-size: 15px; color: #556; margin-bottom: 6px; }
   background: #fff7ed; border: 1px solid #fed7aa; border-radius: 10px; padding: 1px 6px;
 }
 .ac-item-sub { color: #888; font-size: 12px; }
-.ac-empty { padding: 10px 12px; color: #999; font-size: 13px; }
 .ac-tip {
   padding: 6px 12px; color: #9aa2b1; font-size: 12px;
   border-top: 1px dashed #eef0f4; cursor: default;
