@@ -13,6 +13,35 @@ document.addEventListener('keydown', function (e) {
   if (tag === 'INPUT' || tag === 'SELECT') e.preventDefault();
 });
 
+// 防重复提交：录入 / 编辑页的保存按钮（单词 · 语法 · 文章）
+// 统一在 submit 事件上拦截，因此 ⌘+Enter 快捷保存（内部走 requestSubmit）同样被覆盖。
+// 浏览器原生 required 校验不通过时不会派发 submit，故不会误锁按钮。
+(function preventDoubleSubmit() {
+  document.querySelectorAll('form[data-quick-save]').forEach(function (form) {
+    var submitting = false;
+    var btn = form.querySelector('.form-actions button[type="submit"]');
+    form.addEventListener('submit', function (e) {
+      if (submitting) {
+        e.preventDefault(); // 连点：丢弃后续提交，避免重复写入
+        return;
+      }
+      submitting = true;
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = '保存中…';
+      }
+      // 兜底：若因后端报错等原因页面始终没有跳转，超时后解锁，避免按钮永久卡死
+      setTimeout(function () {
+        submitting = false;
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = '保存';
+        }
+      }, 8000);
+    });
+  });
+})();
+
 // 全选/取消全选
 function toggleAll(master) {
   document.querySelectorAll('input[name="ids"]').forEach(function (cb) {
@@ -197,6 +226,110 @@ function removeRelatedChip(btn) {
       resultsBox.style.display = 'none';
     }
   });
+})();
+
+// 录入单词联想：随输入实时匹配词库，点击候选项直接进入该单词的编辑页
+// 仅新建页启用（模板侧用 Word.ID == 0 控制 data-word-suggest），编辑页不参与，避免改词时误跳。
+(function initWordSuggest() {
+  var input = document.getElementById('word-input');
+  if (!input || !input.hasAttribute('data-word-suggest')) return;
+  var box = document.getElementById('word-suggest');
+  if (!box) return;
+
+  var timer = null;
+  var active = -1;
+
+  function rows() { return box.querySelectorAll('.ac-item'); }
+
+  function hide() {
+    box.style.display = 'none';
+    box.innerHTML = '';
+    active = -1;
+  }
+
+  function highlight(idx) {
+    var els = rows();
+    if (!els.length) return;
+    if (idx < 0) idx = els.length - 1;
+    if (idx >= els.length) idx = 0;
+    for (var i = 0; i < els.length; i++) els[i].classList.toggle('is-active', i === idx);
+    active = idx;
+    els[idx].scrollIntoView({ block: 'nearest' });
+  }
+
+  function gotoEdit(id) {
+    window.location.href = '/words/' + id + '/edit';
+  }
+
+  function search() {
+    var q = input.value.trim();
+    if (!q) { hide(); return; }
+    fetch('/api/words/search?q=' + encodeURIComponent(q))
+      .then(function (res) { return res.json(); })
+      .then(function (list) {
+        active = -1;
+        if (!list || !list.length) {
+          box.innerHTML = '<div class="ac-empty">词库中暂无匹配，可直接录入</div>';
+          box.style.display = 'block';
+          return;
+        }
+        var html = '';
+        list.slice(0, 8).forEach(function (item) {
+          var label = item.word || '';
+          if (item.kana) label += '（' + item.kana + '）';
+          var sub = item.meanings && item.meanings.length ? item.meanings.join('；') : '';
+          html += '<div class="ac-item" data-id="' + item.id + '">' +
+            '<span class="ac-item-main"><span class="jp">' + esc(label) + '</span>' +
+            '<span class="ac-item-tag">已在词库</span></span>' +
+            (sub ? '<span class="ac-item-sub">' + esc(sub) + '</span>' : '') +
+            '</div>';
+        });
+        html += '<div class="ac-tip">↑↓ 选择 · Enter 进入编辑 · Esc 关闭（⌘+Enter 仍为保存）</div>';
+        box.innerHTML = html;
+        box.style.display = 'block';
+      })
+      .catch(function () { hide(); });
+  }
+
+  input.addEventListener('input', function () {
+    clearTimeout(timer);
+    timer = setTimeout(search, 200);
+  });
+
+  input.addEventListener('keydown', function (e) {
+    if (box.style.display !== 'block' || !rows().length) return;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      highlight(active + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      highlight(active - 1);
+    } else if (e.key === 'Enter' && active >= 0 && !e.metaKey && !e.ctrlKey) {
+      // 有高亮项时 Enter 是「进入编辑」；⌘/Ctrl+Enter 仍交给表单保存，不在此拦截
+      e.preventDefault();
+      gotoEdit(rows()[active].getAttribute('data-id'));
+    } else if (e.key === 'Escape') {
+      e.preventDefault();
+      hide();
+    }
+  });
+
+  // 用 mousedown 而非 click：早于输入框 blur 触发，避免失焦先把下拉关掉导致点击落空
+  box.addEventListener('mousedown', function (e) {
+    var el = e.target.closest('.ac-item');
+    if (!el) return;
+    e.preventDefault();
+    gotoEdit(el.getAttribute('data-id'));
+  });
+
+  input.addEventListener('blur', function () { setTimeout(hide, 150); });
+  input.addEventListener('focus', function () { if (input.value.trim()) search(); });
+
+  function esc(s) {
+    var d = document.createElement('div');
+    d.textContent = s;
+    return d.innerHTML;
+  }
 })();
 
 // 单词测试
